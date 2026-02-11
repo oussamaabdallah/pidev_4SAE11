@@ -1,6 +1,8 @@
 package com.example.review.service;
 
+import com.example.review.entity.Review;
 import com.example.review.entity.ReviewResponse;
+import com.example.review.repository.ReviewRepository;
 import com.example.review.repository.ReviewResponseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,9 +16,18 @@ import java.util.Optional;
 public class ReviewResponseServiceImpl implements ReviewResponseService {
     
     private final ReviewResponseRepository reviewResponseRepository;
+    private final ReviewRepository reviewRepository;
     
     @Override
     public ReviewResponse createResponse(ReviewResponse reviewResponse) {
+        // If a reviewId was provided in the request body, load the Review entity
+        // and attach it so that the not-null FK constraint is satisfied.
+        if (reviewResponse.getReview() == null && reviewResponse.getReviewId() != null) {
+            Review review = reviewRepository.findById(reviewResponse.getReviewId())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Review not found with id: " + reviewResponse.getReviewId()));
+            reviewResponse.setReview(review);
+        }
         return reviewResponseRepository.save(reviewResponse);
     }
     
