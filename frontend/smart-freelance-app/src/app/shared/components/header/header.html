@@ -1,7 +1,7 @@
 <header class="header">
   <div class="header-container">
     <!-- Logo -->
-    <a [routerLink]="auth.isLoggedIn() ? (auth.isAdmin() ? '/admin' : '/dashboard') : '/'" class="header-logo">
+    <a [routerLink]="logoRoute" class="header-logo">
       <span class="logo-text">Freelancia</span>
     </a>
 
