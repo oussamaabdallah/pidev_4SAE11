@@ -17,7 +17,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
         </processorPath>
         <module name="Project" />
       </profile>
@@ -31,6 +31,7 @@
         <module name="planning" />
         <module name="KeyCloak" />
         <module name="user" />
+        <module name="Offer" />
         <module name="review" />
       </profile>
     </annotationProcessing>
@@ -38,7 +39,7 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="Eureka" options="-parameters" />
-      <module name="Evaluation" options="-parameters" />
+      <module name="Evaluation" options="" />
       <module name="KeyCloak" options="-parameters" />
       <module name="Offer" options="-parameters" />
       <module name="Project" options="-parameters" />

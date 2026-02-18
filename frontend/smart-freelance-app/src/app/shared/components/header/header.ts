@@ -36,6 +36,12 @@ export class Header implements OnInit {
     }
   }
 
+  /** Computed in the class so Angular's CD sees a stable reference on the first pass. */
+  get logoRoute(): string {
+    if (!this.auth.isLoggedIn()) return '/';
+    return this.auth.isAdmin() ? '/admin' : '/dashboard';
+  }
+
   toggleMobileMenu() {
     this.mobileMenuOpen.update(v => !v);
   }

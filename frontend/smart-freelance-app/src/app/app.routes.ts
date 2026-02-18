@@ -100,12 +100,13 @@ export const routes: Routes = [
       },
       { path: 'browse-jobs', loadComponent: () => import('./pages/dashboard/dashboard-home/dashboard-home').then(m => m.DashboardHome) },
       { path: 'my-applications', loadComponent: () => import('./pages/dashboard/dashboard-home/dashboard-home').then(m => m.DashboardHome) },
-      { path: 'my-portfolio', loadComponent: () => import('./pages/dashboard/dashboard-home/dashboard-home').then(m => m.DashboardHome) },
+      { path: 'my-portfolio', loadComponent: () => import('./pages/dashboard/portfolio-overview/portfolio-overview').then(m => m.PortfolioOverview) },
       { path: 'messages', loadComponent: () => import('./pages/dashboard/dashboard-home/dashboard-home').then(m => m.DashboardHome) },
       { path: 'notifications', loadComponent: () => import('./pages/dashboard/dashboard-home/dashboard-home').then(m => m.DashboardHome) },
-      { path: 'profile', loadComponent: () => import('./pages/dashboard/dashboard-home/dashboard-home').then(m => m.DashboardHome) },
+      { path: 'profile', loadComponent: () => import('./pages/dashboard/profile/profile').then(m => m.Profile) },
       { path: 'settings', loadComponent: () => import('./pages/dashboard/dashboard-home/dashboard-home').then(m => m.DashboardHome) },
       { path: 'my-contracts', loadComponent: () => import('./pages/dashboard/my-contracts/my-contracts').then(m => m.MyContracts) },
+      { path: 'my-contracts/:id', loadComponent: () => import('./pages/dashboard/my-contracts/contract-detail/contract-detail').then(m => m.ContractDetail) },
     ]
   },
 
@@ -119,6 +120,9 @@ export const routes: Routes = [
       { path: '', loadComponent: () => import('./pages/admin/admin-dashboard/admin-dashboard').then(m => m.AdminDashboard) },
       // Placeholder routes for future implementation
       { path: 'users', loadComponent: () => import('./pages/admin/user-management/user-management').then(m => m.UserManagement) },
+      { path: 'contracts', loadComponent: () => import('./pages/admin/admin-contracts/admin-contracts').then(m => m.AdminContracts) },
+
+    
       { path: 'offers', loadComponent: () => import('./pages/admin/offer-management/offer-management').then(m => m.OfferManagement) },
       { path: 'projects', loadComponent: () => import('./pages/admin/project-management/project-management').then(m => m.ProjectManagement) },
       { path: 'planning', loadComponent: () => import('./pages/admin/planning-management/planning-management').then(m => m.PlanningManagement) },
