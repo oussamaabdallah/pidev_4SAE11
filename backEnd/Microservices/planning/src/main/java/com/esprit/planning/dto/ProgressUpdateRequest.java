@@ -14,7 +14,7 @@ public class ProgressUpdateRequest {
     @Schema(description = "ID of the project", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long projectId;
 
-    @Schema(description = "ID of the contract", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "ID of the contract (optional; null if no contract yet)", example = "1", nullable = true)
     private Long contractId;
 
     @Schema(description = "ID of the freelancer who submitted the update", example = "10", requiredMode = Schema.RequiredMode.REQUIRED)

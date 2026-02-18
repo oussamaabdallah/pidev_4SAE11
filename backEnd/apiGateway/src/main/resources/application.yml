@@ -12,7 +12,9 @@ spring:
         add-to-simple-url-handler-mapping: true
         cors-configurations:
           '[/**]':
-            allowedOrigins: "http://localhost:4200"
+            allowedOrigins:
+              - "http://localhost:4200"
+              - "http://127.0.0.1:4200"
             allowedMethods:
               - GET
               - POST
@@ -57,22 +59,25 @@ spring:
             connect-timeout: 10000
 
 
+        # Planning: direct URL (no Eureka), same as project
         - id: planning
-          uri: lb://planning
+          uri: http://localhost:8081
           predicates:
             - Path=/planning/**
           filters:
             - StripPrefix=1
 
+        # Review: direct URL so it works without Eureka (service runs on 8085)
         - id: review
-          uri: lb://review
+          uri: http://localhost:8085
           predicates:
             - Path=/review/**
           filters:
             - StripPrefix=1
 
+        # Project: direct URL so requests always hit the Project microservice (port 8084)
         - id: project
-          uri: lb://Project
+          uri: http://localhost:8084
           predicates:
             - Path=/project/**
           filters:

@@ -4,15 +4,15 @@
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
+        <option value="$PROJECT_DIR$/backEnd/apiGateway/pom.xml" />
         <option value="$PROJECT_DIR$/backEnd/Eureka/pom.xml" />
         <option value="$PROJECT_DIR$/backEnd/KeyCloak/pom.xml" />
-        <option value="$PROJECT_DIR$/backEnd/apiGateway/pom.xml" />
-        <option value="$PROJECT_DIR$/backEnd/Microservices/user/pom.xml" />
-        <option value="$PROJECT_DIR$/backEnd/Microservices/Offer/pom.xml" />
-        <option value="$PROJECT_DIR$/backEnd/Microservices/review/pom.xml" />
-        <option value="$PROJECT_DIR$/backEnd/Microservices/Project/pom.xml" />
-        <option value="$PROJECT_DIR$/backEnd/Microservices/planning/pom.xml" />
         <option value="$PROJECT_DIR$/backEnd/Microservices/Evaluation/pom.xml" />
+        <option value="$PROJECT_DIR$/backEnd/Microservices/Offer/pom.xml" />
+        <option value="$PROJECT_DIR$/backEnd/Microservices/planning/pom.xml" />
+        <option value="$PROJECT_DIR$/backEnd/Microservices/Project/pom.xml" />
+        <option value="$PROJECT_DIR$/backEnd/Microservices/review/pom.xml" />
+        <option value="$PROJECT_DIR$/backEnd/Microservices/user/pom.xml" />
       </list>
     </option>
   </component>

@@ -18,7 +18,12 @@
 
       <div class="toolbar">
         <span class="count">{{ updates.length }} update(s)</span>
-        <button type="button" class="btn-add" (click)="openCreate()">Add progress update</button>
+        <div class="toolbar-actions">
+          <button type="button" class="btn-refresh" (click)="loadUpdatesForProject()" [disabled]="loadingUpdates">
+            {{ loadingUpdates ? 'Loading…' : 'Refresh' }}
+          </button>
+          <button type="button" class="btn-add" (click)="openCreate()">Add progress update</button>
+        </div>
       </div>
 
       @if (loadingUpdates) {
@@ -87,11 +92,11 @@
   }
 
   @if (modalOpen) {
-    <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal-overlay" (click)="closeModal()">
       <div class="modal" (click)="$event.stopPropagation()">
-        <h2>{{ editing ? 'Edit progress update' : 'Add progress update' }}</h2>
+        <h3>{{ editing ? 'Edit progress update' : 'Add progress update' }}</h3>
         <form [formGroup]="form" (ngSubmit)="save()">
-          <div class="form-group">
+          <div class="field">
             <label for="title">Title <span class="required">*</span></label>
             <input id="title" type="text" formControlName="title" [maxlength]="titleMax" placeholder="e.g. Backend API completed" />
             @if (getTitleError()) {
@@ -99,7 +104,7 @@
             }
             <span class="char-count">{{ form.get('title')?.value?.length ?? 0 }}/{{ titleMax }}</span>
           </div>
-          <div class="form-group">
+          <div class="field">
             <label for="description">Description</label>
             <textarea id="description" formControlName="description" [maxlength]="descriptionMax" rows="3" placeholder="Describe what was done."></textarea>
             @if (getDescriptionError()) {
@@ -107,7 +112,7 @@
             }
             <span class="char-count">{{ form.get('description')?.value?.length ?? 0 }}/{{ descriptionMax }}</span>
           </div>
-          <div class="form-group">
+          <div class="field">
             <label for="progressPercentage">Progress % <span class="required">*</span></label>
             <input id="progressPercentage" type="number" formControlName="progressPercentage" min="0" max="100" />
             @if (getProgressError()) {
@@ -115,8 +120,8 @@
             }
           </div>
           <div class="modal-actions">
-            <button type="button" class="btn-cancel" (click)="closeModal()">Cancel</button>
-            <button type="submit" class="btn-save" [disabled]="form.invalid || saving">
+            <button type="button" class="btn-secondary" (click)="closeModal()" [disabled]="saving">Cancel</button>
+            <button type="submit" class="btn-primary" [disabled]="form.invalid || saving">
               {{ saving ? 'Saving…' : (editing ? 'Update' : 'Create') }}
             </button>
           </div>
@@ -126,13 +131,16 @@
   }
 
   @if (deleteTarget) {
-    <div class="modal-backdrop" (click)="cancelDelete()">
-      <div class="modal" (click)="$event.stopPropagation()">
-        <h2>Delete progress update?</h2>
-        <p>"{{ deleteTarget.title }}" will be removed. This cannot be undone.</p>
+    <div class="modal-overlay" (click)="cancelDelete()">
+      <div class="modal modal--confirm" (click)="$event.stopPropagation()">
+        <h3>Delete progress update</h3>
+        <p class="modal-message">
+          Are you sure you want to delete <strong>{{ deleteTarget.title }}</strong>?
+          This action cannot be undone.
+        </p>
         <div class="modal-actions">
-          <button type="button" class="btn-cancel" (click)="cancelDelete()">Cancel</button>
-          <button type="button" class="btn-delete" (click)="doDelete()" [disabled]="deleting">
+          <button type="button" class="btn-secondary" (click)="cancelDelete()" [disabled]="deleting">Cancel</button>
+          <button type="button" class="btn-danger" (click)="doDelete()" [disabled]="deleting">
             {{ deleting ? 'Deleting…' : 'Delete' }}
           </button>
         </div>

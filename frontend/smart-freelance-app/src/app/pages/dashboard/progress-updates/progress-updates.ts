@@ -87,8 +87,8 @@ export class ProgressUpdates implements OnInit {
     this.loading = true;
     this.errorMessage = '';
     this.projectService.getApplicationsByFreelancer(this.currentUser.id).subscribe({
-      next: (applications) => {
-        const uniqueProjectIds = [...new Set((applications || []).map((a) => a.projectId))];
+      next: (applications: ProjectApplication[]) => {
+        const uniqueProjectIds = [...new Set((applications || []).map((a: ProjectApplication) => a.projectId))];
         if (uniqueProjectIds.length === 0) {
           this.projects = [];
           this.loading = false;
@@ -102,7 +102,7 @@ export class ProgressUpdates implements OnInit {
               .filter((p): p is Project => p != null)
               .map((project) => ({
                 project,
-                application: applications.find((a) => a.projectId === project.id),
+                application: applications.find((a: ProjectApplication) => a.projectId === project.id),
               }));
             this.loading = false;
             this.cdr.detectChanges();
@@ -135,9 +135,10 @@ export class ProgressUpdates implements OnInit {
   }
 
   loadUpdatesForProject(): void {
-    if (!this.selectedProject) return;
+    const projectId = this.selectedProject?.id;
+    if (!this.selectedProject || projectId == null) return;
     this.loadingUpdates = true;
-    this.planning.getProgressUpdatesByProjectId(this.selectedProject.id).subscribe({
+    this.planning.getProgressUpdatesByProjectId(projectId).subscribe({
       next: (list) => {
         this.updates = (list || []).filter((u) => u.freelancerId === this.currentUser?.id);
         this.commentsByUpdateId = {};
@@ -168,6 +169,7 @@ export class ProgressUpdates implements OnInit {
 
   openCreate(): void {
     this.editing = null;
+    this.errorMessage = '';
     this.form.reset({ title: '', description: '', progressPercentage: 0 });
     this.modalOpen = true;
   }
@@ -188,10 +190,11 @@ export class ProgressUpdates implements OnInit {
   }
 
   save(): void {
-    if (!this.currentUser || !this.selectedProject || this.form.invalid) return;
+    const projectId = this.selectedProject?.id;
+    if (!this.currentUser || !this.selectedProject || projectId == null || this.form.invalid) return;
     const v = this.form.value;
     const request: ProgressUpdateRequest = {
-      projectId: this.selectedProject.id,
+      projectId,
       contractId: null,
       freelancerId: this.currentUser.id,
       title: (v.title as string).trim(),
@@ -221,17 +224,22 @@ export class ProgressUpdates implements OnInit {
       this.planning.createProgressUpdate(request).subscribe({
         next: (created) => {
           this.saving = false;
-          if (created) {
-            this.closeModal();
-            this.loadUpdatesForProject();
-          } else {
-            this.errorMessage = 'Failed to create.';
-          }
+          this.errorMessage = '';
+          this.closeModal();
+          this.loadUpdatesForProject();
           this.cdr.detectChanges();
         },
-        error: () => {
+        error: (err: { status?: number; error?: { message?: string; error?: string }; message?: string }) => {
           this.saving = false;
-          this.errorMessage = 'Failed to create.';
+          const status = err?.status;
+          let msg: string;
+          if (status === 0) {
+            msg = 'Cannot connect to the server. Start the API Gateway (port 8078) and the Planning service (port 8081), then try again.';
+          } else {
+            const body = err?.error?.message ?? err?.error?.error ?? err?.message;
+            msg = body && typeof body === 'string' ? body : 'Failed to create progress update. Check that the Planning service is running.';
+          }
+          this.errorMessage = msg;
           this.cdr.detectChanges();
         },
       });

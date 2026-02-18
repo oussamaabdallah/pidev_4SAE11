@@ -80,7 +80,7 @@ export class TrackProgress implements OnInit {
     this.loading = true;
     this.errorMessage = '';
     this.projectService.getByClientId(this.currentUser.id).subscribe({
-      next: (list) => {
+      next: (list: Project[]) => {
         this.projects = list ?? [];
         this.loading = false;
         this.cdr.detectChanges();
@@ -108,9 +108,10 @@ export class TrackProgress implements OnInit {
   }
 
   loadUpdatesForProject(): void {
-    if (!this.selectedProject) return;
+    const projectId = this.selectedProject?.id;
+    if (!this.selectedProject || projectId == null) return;
     this.loadingUpdates = true;
-    this.planning.getProgressUpdatesByProjectId(this.selectedProject.id).subscribe({
+    this.planning.getProgressUpdatesByProjectId(projectId).subscribe({
       next: (list) => {
         this.updates = list ?? [];
         this.loadingUpdates = false;

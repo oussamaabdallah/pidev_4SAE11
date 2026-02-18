@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.example.offer.entity.OfferStatus;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -20,8 +21,28 @@ public class OfferResponse {
     private String description;
     private BigDecimal price;
     private String durationType;
-    private OfferStatus status;
+    private OfferStatus offerStatus;
+    private LocalDate deadline;
+    private String category;
+    private BigDecimal rating;
+    private BigDecimal communicationScore;
+    private String tags;
+    private String imageUrl;
+    private Integer viewsCount;
+    private Boolean isFeatured;
+    private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime publishedAt;
+    private LocalDateTime expiredAt;
+
+    // Informations supplémentaires
     private Integer applicationsCount;
+    private Long pendingApplicationsCount;
+
+    /** ID du statut projet (optionnel, référence externe au microservice Project) */
+    private Long projectStatusId;
+
+    private Boolean canReceiveApplications;
+    private Boolean isValid;
 }

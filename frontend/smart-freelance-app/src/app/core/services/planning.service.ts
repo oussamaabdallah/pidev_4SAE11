@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, map, of } from 'rxjs';
+import { Observable, catchError, map, of, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 const PLANNING_API = `${environment.apiGatewayUrl}/planning/api`;
@@ -75,9 +75,9 @@ export class PlanningService {
     );
   }
 
-  createProgressUpdate(request: ProgressUpdateRequest): Observable<ProgressUpdate | null> {
+  createProgressUpdate(request: ProgressUpdateRequest): Observable<ProgressUpdate> {
     return this.http.post<ProgressUpdate>(`${PLANNING_API}/progress-updates`, request).pipe(
-      catchError(() => of(null))
+      catchError((err) => throwError(() => err))
     );
   }
 

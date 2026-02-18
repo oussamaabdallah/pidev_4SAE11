@@ -8,8 +8,9 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="apiGateway" />
-        <module name="Eureka" />
         <module name="Evaluation" />
+        <module name="Eureka" />
+        <module name="Offer" />
       </profile>
       <profile name="Annotation profile for Project" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />

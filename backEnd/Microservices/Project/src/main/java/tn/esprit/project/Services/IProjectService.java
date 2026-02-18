@@ -8,11 +8,13 @@ public interface IProjectService {
     Project addProject(Project project);
     Project updateProject(Project project);
 
-    void deleteProject(Project project);
-
     void deleteProject(Long id);
 
     Project getProjectById(Long id);
 
+    List<Project> getAllProjects();
+
     List<Project> getProjectsByClientId(Long clientId);
+
+    List<Project> getProjectsByFreelancerId(Long freelancerId);
 }

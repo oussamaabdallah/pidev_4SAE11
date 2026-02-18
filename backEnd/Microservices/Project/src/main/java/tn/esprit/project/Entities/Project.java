@@ -1,8 +1,11 @@
 package tn.esprit.project.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import tn.esprit.project.Entities.Enums.ProjectStatus;
 
 import java.math.BigDecimal;
@@ -21,14 +24,22 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     Long clientId;
+    /** Set when project is created from an accepted offer (freelancer assigned). */
+    Long freelancerId;
     String title;
     String description;
     BigDecimal budget;
     LocalDateTime deadline;
     ProjectStatus status;
     String category;
-    List<String> skillsRequiered;
+    String skillsRequiered;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
     LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    @UpdateTimestamp
     LocalDateTime updatedAt;
 
     @OneToMany(
@@ -36,6 +47,7 @@ public class Project {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
+    @JsonIgnore
     private List<ProjectApplication> applications = new ArrayList<>();
 
 

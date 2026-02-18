@@ -21,10 +21,6 @@ public class IProjectServicelmp implements IProjectService{
     }
 
     @Override
-    public void deleteProject(Project project) {
-
-    }
-    @Override
     public void deleteProject(Long id) {
         projectRepository.deleteById(id);
     }
@@ -34,7 +30,18 @@ public class IProjectServicelmp implements IProjectService{
     }
 
     @Override
+    public List<Project> getAllProjects() {
+        return projectRepository.findAll();
+    }
+
+    @Override
     public List<Project> getProjectsByClientId(Long clientId) {
         return projectRepository.findByClientId(clientId);
     }
+
+    @Override
+    public List<Project> getProjectsByFreelancerId(Long freelancerId) {
+        return projectRepository.findByFreelancerId(freelancerId);
+    }
+
 }

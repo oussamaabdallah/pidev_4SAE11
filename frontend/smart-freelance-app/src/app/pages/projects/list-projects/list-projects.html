@@ -1,0 +1,120 @@
+<div class="projects-container">
+  <div class="projects-header">
+    <h2 class="section-title">Projects List</h2>
+    <a routerLink="add" class="btn btn--add-project">
+      + Add Project
+    </a>
+  </div>
+
+  <div class="toolbar">
+    <span class="toolbar-count">{{ projects.length }} project(s)</span>
+    <div class="toolbar-actions">
+      <button type="button" class="btn-refresh" (click)="loadProjects()" [disabled]="isLoading">
+        {{ isLoading ? 'Loading…' : 'Refresh' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading / Error states -->
+  <div class="loading-state" *ngIf="isLoading">
+    <p>Loading projects...</p>
+    <!-- You can add a nice spinner here later -->
+  </div>
+
+  <div class="error-state" *ngIf="errorMessage && !isLoading">
+    <p class="error">{{ errorMessage }}</p>
+    <button (click)="loadProjects()" class="btn btn--retry">Try Again</button>
+  </div>
+
+  <!-- Real projects grid -->
+  <div class="projects-grid"
+       *ngIf="!isLoading && !errorMessage && projects.length > 0">
+
+    <div class="project-card" *ngFor="let project of projects;">
+      <div class="project-content">
+        <div class="project-header">
+          <h3 class="project-title">{{ project.title }}</h3>
+          <span 
+            class="project-status" 
+            [ngClass]="{
+              'status-open': project.status === 'OPEN',
+              'status-in-progress': project.status === 'IN_PROGRESS',
+              'status-completed': project.status === 'COMPLETED',
+              'status-on-hold': project.status === 'CANCELLED'
+            }"
+          >
+            {{ project.status }}
+          </span>
+        </div>
+
+        <span class="project-category">{{ project.category || 'Uncategorized' }}</span>
+
+        <p class="project-description">
+          {{ project.description || 'No description available' }}
+        </p>
+
+        <div class="skills-required">
+          <span class="skill" *ngFor="let skill of getSkills(project)">
+            {{ skill }}
+          </span>
+
+          <span class="skill empty" *ngIf="getSkills(project).length === 0">
+            No skills listed
+          </span>
+        </div>
+
+        <div class="project-actions">
+          <button 
+            [routerLink]="[project.id, 'show']" 
+            class="btn btn--info" 
+            title="View project details"
+          >
+            Show
+          </button>
+
+          <button 
+            [routerLink]="[project.id, 'edit']" 
+            class="btn btn--update" 
+            title="Edit this project"
+          >
+            Update
+          </button>
+
+          <button 
+            (click)="openDeleteModal(project)" 
+            class="btn btn--delete" 
+            title="Delete this project"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty state (when no projects, after loading finished) -->
+  <div class="empty-state" 
+       *ngIf="!isLoading && !errorMessage && projects.length === 0">
+    <p>No projects found.</p>
+    <a routerLink="add" class="btn btn--add-project">Create your first project</a>
+  </div>
+
+  <!-- Delete confirmation modal (like user management) -->
+  @if (projectToDelete) {
+    <div class="modal-overlay" (click)="closeDeleteModal()">
+      <div class="modal modal--confirm" (click)="$event.stopPropagation()">
+        <h3>Delete project</h3>
+        <p class="modal-message">
+          Are you sure you want to delete <strong>{{ projectToDelete.title }}</strong>?
+          This action cannot be undone.
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeDeleteModal()" [disabled]="deleting">Cancel</button>
+          <button type="button" class="btn-danger" (click)="doDelete()" [disabled]="deleting">
+            {{ deleting ? 'Deleting…' : 'Delete' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

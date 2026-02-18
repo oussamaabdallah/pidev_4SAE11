@@ -29,9 +29,75 @@ export const routes: Routes = [
       // Placeholder routes for future implementation
       { path: 'browse-freelancers', loadComponent: () => import('./pages/dashboard/dashboard-home/dashboard-home').then(m => m.DashboardHome) },
       { path: 'post-job', loadComponent: () => import('./pages/dashboard/dashboard-home/dashboard-home').then(m => m.DashboardHome) },
-      { path: 'my-projects', loadComponent: () => import('./pages/dashboard/dashboard-home/dashboard-home').then(m => m.DashboardHome) },
+      {
+        path: 'my-projects',
+        children: [
+          // List / overview of all projects
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () =>
+              import('./pages/projects/list-projects/list-projects')
+                .then(m => m.ListProjects),
+            // title: 'My Projects'   ← optional – can be used by title service
+          },
+
+          // Create new project
+          {
+            path: 'add',
+            loadComponent: () =>
+              import('./pages/projects/add-project/add-project')
+                .then(m => m.AddProject),
+            title: 'Add New Project'
+          },
+
+          // View single project details
+          {
+            path: ':id/show',
+            loadComponent: () =>
+              import('./pages/projects/show-project/show-project')
+                .then(m => m.ShowProject),
+            title: 'Project Details'
+          },
+
+          // Edit existing project
+          {
+            path: ':id/edit',
+            loadComponent: () =>
+              import('./pages/projects/update-project/update-project')
+                .then(m => m.UpdateProject),
+            title: 'Edit Project'
+          },
+        ]
+      },
       { path: 'progress-updates', loadComponent: () => import('./pages/dashboard/progress-updates/progress-updates').then(m => m.ProgressUpdates) },
       { path: 'track-progress', loadComponent: () => import('./pages/dashboard/track-progress/track-progress').then(m => m.TrackProgress) },
+      {
+        path: 'my-offers',
+        children: [
+          { path: '', pathMatch: 'full', loadComponent: () => import('./pages/dashboard/my-offers/list-offers').then(m => m.ListOffers) },
+          { path: 'add', loadComponent: () => import('./pages/dashboard/my-offers/add-offer').then(m => m.AddOffer) },
+          { path: ':id/edit', loadComponent: () => import('./pages/dashboard/my-offers/edit-offer').then(m => m.EditOffer) },
+          { path: ':id/show', loadComponent: () => import('./pages/dashboard/my-offers/show-offer').then(m => m.ShowOffer) },
+        ]
+      },
+      {
+        path: 'browse-offers',
+        children: [
+          { path: '', pathMatch: 'full', loadComponent: () => import('./pages/dashboard/browse-offers/browse-offers').then(m => m.BrowseOffers) },
+          { path: ':id', loadComponent: () => import('./pages/dashboard/browse-offers/offer-detail').then(m => m.OfferDetail) },
+        ]
+      },
+      { path: 'my-offer-applications', loadComponent: () => import('./pages/dashboard/my-offer-applications/my-offer-applications').then(m => m.MyOfferApplications) },
+      {
+        path: 'reviews',
+        children: [
+          { path: '', pathMatch: 'full', loadComponent: () => import('./pages/dashboard/reviews/my-reviews/my-reviews').then(m => m.MyReviews) },
+          { path: 'about-me', loadComponent: () => import('./pages/dashboard/reviews/reviews-about-me/reviews-about-me').then(m => m.ReviewsAboutMe) },
+          { path: 'add', loadComponent: () => import('./pages/dashboard/reviews/add-review/add-review').then(m => m.AddReview) },
+          { path: ':id/edit', loadComponent: () => import('./pages/dashboard/reviews/edit-review/edit-review').then(m => m.EditReview) },
+        ]
+      },
       { path: 'browse-jobs', loadComponent: () => import('./pages/dashboard/dashboard-home/dashboard-home').then(m => m.DashboardHome) },
       { path: 'my-applications', loadComponent: () => import('./pages/dashboard/dashboard-home/dashboard-home').then(m => m.DashboardHome) },
       { path: 'my-portfolio', loadComponent: () => import('./pages/dashboard/portfolio-overview/portfolio-overview').then(m => m.PortfolioOverview) },
@@ -55,10 +121,13 @@ export const routes: Routes = [
       // Placeholder routes for future implementation
       { path: 'users', loadComponent: () => import('./pages/admin/user-management/user-management').then(m => m.UserManagement) },
       { path: 'contracts', loadComponent: () => import('./pages/admin/admin-contracts/admin-contracts').then(m => m.AdminContracts) },
-      { path: 'offers', loadComponent: () => import('./pages/admin/admin-dashboard/admin-dashboard').then(m => m.AdminDashboard) },
-      { path: 'projects', loadComponent: () => import('./pages/admin/admin-dashboard/admin-dashboard').then(m => m.AdminDashboard) },
+
+    
+      { path: 'offers', loadComponent: () => import('./pages/admin/offer-management/offer-management').then(m => m.OfferManagement) },
+      { path: 'projects', loadComponent: () => import('./pages/admin/project-management/project-management').then(m => m.ProjectManagement) },
+      { path: 'planning', loadComponent: () => import('./pages/admin/planning-management/planning-management').then(m => m.PlanningManagement) },
       { path: 'evaluations', loadComponent: () => import('./pages/admin/admin-dashboard/admin-dashboard').then(m => m.AdminDashboard) },
-      { path: 'reviews', loadComponent: () => import('./pages/admin/admin-dashboard/admin-dashboard').then(m => m.AdminDashboard) },
+      { path: 'reviews', loadComponent: () => import('./pages/admin/review-management/review-management').then(m => m.ReviewManagement) },
       { path: 'settings', loadComponent: () => import('./pages/admin/admin-dashboard/admin-dashboard').then(m => m.AdminDashboard) },
     ]
   },
