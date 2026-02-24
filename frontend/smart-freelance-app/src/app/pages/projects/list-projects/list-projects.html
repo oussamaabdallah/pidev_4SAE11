@@ -93,9 +93,10 @@
   </div>
 
   <!-- Empty state (when no projects, after loading finished) -->
-  <div class="empty-state" 
+  <div class="empty-state"
        *ngIf="!isLoading && !errorMessage && projects.length === 0">
-    <p>No projects found.</p>
+    <span class="empty-icon">🗂️</span>
+    <p>No projects found. Start by creating your first one!</p>
     <a routerLink="add" class="btn btn--add-project">Create your first project</a>
   </div>
 

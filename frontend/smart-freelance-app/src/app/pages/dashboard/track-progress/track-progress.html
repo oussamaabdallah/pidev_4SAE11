@@ -19,7 +19,10 @@
       @if (loadingUpdates) {
         <p class="loading-msg">Loading progress updates…</p>
       } @else if (updates.length === 0) {
-        <p class="empty-msg">No progress updates for this project yet. Updates will appear here when your freelancer submits progress.</p>
+        <div class="empty-state">
+          <span class="empty-icon">📊</span>
+          <p>No progress updates for this project yet. Updates will appear here when your freelancer submits progress.</p>
+        </div>
       } @else {
         <div class="updates-list">
           @for (u of updates; track u.id) {
@@ -98,7 +101,10 @@
       @if (loading) {
         <p class="loading-msg">Loading your projects…</p>
       } @else if (projects.length === 0) {
-        <p class="empty-msg">You have no projects yet. Post a job from Post a Job to create projects and receive progress updates.</p>
+        <div class="empty-state">
+          <span class="empty-icon">🗂️</span>
+          <p>You have no projects yet. Post a job to create projects and receive progress updates.</p>
+        </div>
       } @else {
         <p class="section-label">Select a project to view progress and leave comments</p>
         <div class="projects-grid">
