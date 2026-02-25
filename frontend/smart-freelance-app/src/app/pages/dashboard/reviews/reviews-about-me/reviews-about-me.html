@@ -1,7 +1,13 @@
 <div class="reviews-container">
   <div class="reviews-header">
-    <h2 class="section-title">Reviews about me</h2>
-    <p class="section-subtitle">What others have said about working with you.</p>
+    <div class="reviews-header-text">
+      <h2 class="section-title">Reviews about me</h2>
+      <p class="section-subtitle">What others have said about working with you.</p>
+    </div>
+    <div class="reviews-header-actions">
+      <a routerLink="/dashboard/reviews" class="btn btn--secondary">My Reviews</a>
+      <a routerLink="/dashboard/reviews/add" class="btn btn--add">+ Leave a review</a>
+    </div>
   </div>
 
   @if (stats) {

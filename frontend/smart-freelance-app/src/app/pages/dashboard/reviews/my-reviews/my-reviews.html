@@ -4,7 +4,10 @@
       <h2 class="section-title">My Reviews</h2>
       <p class="section-subtitle">Reviews you’ve left for clients and freelancers.</p>
     </div>
-    <a routerLink="/dashboard/reviews/add" class="btn btn--add">+ Leave a review</a>
+    <div class="reviews-header-actions">
+      <a routerLink="/dashboard/reviews/about-me" class="btn btn--secondary">Reviews about me</a>
+      <a routerLink="/dashboard/reviews/add" class="btn btn--add">+ Leave a review</a>
+    </div>
   </div>
 
   @if (stats) {

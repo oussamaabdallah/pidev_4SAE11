@@ -4,28 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7bce780c-f0d9-4f6e-8244-4c794ceacf87" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backEnd/Microservices/Project/src/main/java/tn/esprit/project/Controllers/ProjectController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backEnd/Microservices/Project/src/main/java/tn/esprit/project/Controllers/ProjectController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backEnd/Microservices/Project/src/main/java/tn/esprit/project/Entities/Project.java" beforeDir="false" afterPath="$PROJECT_DIR$/backEnd/Microservices/Project/src/main/java/tn/esprit/project/Entities/Project.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backEnd/Microservices/Project/src/main/java/tn/esprit/project/Repository/ProjectApplicationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backEnd/Microservices/Project/src/main/java/tn/esprit/project/Repository/ProjectApplicationRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backEnd/Microservices/Project/src/main/java/tn/esprit/project/Services/IProjectService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backEnd/Microservices/Project/src/main/java/tn/esprit/project/Services/IProjectService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backEnd/Microservices/Project/src/main/java/tn/esprit/project/Services/IProjectServicelmp.java" beforeDir="false" afterPath="$PROJECT_DIR$/backEnd/Microservices/Project/src/main/java/tn/esprit/project/Services/IProjectServicelmp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backEnd/Microservices/review/src/main/java/com/example/review/controller/ReviewController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backEnd/Microservices/review/src/main/java/com/example/review/controller/ReviewController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backEnd/Microservices/review/src/main/java/com/example/review/repository/ReviewRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backEnd/Microservices/review/src/main/java/com/example/review/repository/ReviewRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backEnd/Microservices/review/src/main/java/com/example/review/service/ReviewService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backEnd/Microservices/review/src/main/java/com/example/review/service/ReviewService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backEnd/Microservices/review/src/main/java/com/example/review/service/ReviewServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/backEnd/Microservices/review/src/main/java/com/example/review/service/ReviewServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/core/services/review.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/core/services/review.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/admin/review-management/review-management.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/admin/review-management/review-management.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/admin/review-management/review-management.scss" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/admin/review-management/review-management.scss" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/admin/review-management/review-management.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/admin/review-management/review-management.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/dashboard/reviews/my-reviews/my-reviews.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/dashboard/reviews/my-reviews/my-reviews.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/dashboard/reviews/my-reviews/my-reviews.scss" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/dashboard/reviews/my-reviews/my-reviews.scss" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/dashboard/reviews/my-reviews/my-reviews.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/dashboard/reviews/my-reviews/my-reviews.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/dashboard/reviews/reviews-about-me/reviews-about-me.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/dashboard/reviews/reviews-about-me/reviews-about-me.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/dashboard/reviews/reviews-about-me/reviews-about-me.scss" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/dashboard/reviews/reviews-about-me/reviews-about-me.scss" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/dashboard/reviews/reviews-about-me/reviews-about-me.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/smart-freelance-app/src/app/pages/dashboard/reviews/reviews-about-me/reviews-about-me.ts" afterDir="false" />
-    </list>
+    <list default="true" id="7bce780c-f0d9-4f6e-8244-4c794ceacf87" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -257,7 +236,7 @@
       <workItem from="1771976883422" duration="2133000" />
       <workItem from="1771979576060" duration="1475000" />
       <workItem from="1771984452636" duration="5712000" />
-      <workItem from="1772032469413" duration="3278000" />
+      <workItem from="1772032469413" duration="3582000" />
     </task>
     <servers />
   </component>

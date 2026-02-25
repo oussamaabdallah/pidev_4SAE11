@@ -18,7 +18,62 @@
 }
 
 .reviews-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: $spacing-lg;
   margin-bottom: $spacing-2xl;
+}
+
+.reviews-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.reviews-header-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.btn--secondary {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-sm $spacing-lg;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-decoration: none;
+  color: $neutral-600;
+  background: $white;
+  border: 1px solid $neutral-300;
+  border-radius: $radius-full;
+  transition: background $transition-base, border-color $transition-base, color $transition-base;
+  &:hover {
+    background: $neutral-50;
+    border-color: $neutral-400;
+    color: $neutral-800;
+  }
+}
+
+.btn--add {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-xl;
+  @include button-gradient;
+  border-radius: $radius-full;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-sm;
+  text-decoration: none;
+  color: $white;
+  box-shadow: 0 2px 12px rgba($primary-500, 0.35);
+  transition: transform $transition-base, box-shadow $transition-base;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba($primary-500, 0.4);
+  }
 }
 
 .section-subtitle {

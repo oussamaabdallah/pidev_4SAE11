@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { StarRating } from '../../../../shared/components/star-rating/star-rating';
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserService, User } from '../../../../core/services/user.service';
@@ -11,7 +12,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 @Component({
   selector: 'app-reviews-about-me',
   standalone: true,
-  imports: [CommonModule, StarRating],
+  imports: [CommonModule, RouterLink, StarRating],
   templateUrl: './reviews-about-me.html',
   styleUrl: './reviews-about-me.scss',
 })
