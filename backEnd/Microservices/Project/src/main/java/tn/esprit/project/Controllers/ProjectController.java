@@ -1,6 +1,5 @@
 package tn.esprit.project.Controllers;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.project.Entities.Project;
 import tn.esprit.project.Services.IProjectService;
@@ -9,10 +8,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/projects")
-@RequiredArgsConstructor
 public class ProjectController {
 
     private final IProjectService projectService;
+
+    public ProjectController(IProjectService projectService) {
+        this.projectService = projectService;
+    }
 
 
     @PostMapping("/add")
@@ -36,6 +38,11 @@ public class ProjectController {
     @GetMapping("/client/{clientId}")
     public List<Project> getProjectsByClientId(@PathVariable Long clientId) {
         return projectService.getProjectsByClientId(clientId);
+    }
+
+    @GetMapping("/freelancer/{freelancerId}")
+    public List<Project> getProjectsByFreelancerId(@PathVariable Long freelancerId) {
+        return projectService.getProjectsByFreelancerId(freelancerId);
     }
 
     /** Single project by id (numeric only, so /client/14 is not matched here). */

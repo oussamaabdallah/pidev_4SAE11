@@ -1,5 +1,7 @@
 package com.example.review.controller;
 
+import com.example.review.dto.ReviewPageResponse;
+import com.example.review.dto.ReviewStats;
 import com.example.review.entity.Review;
 import com.example.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,9 +22,9 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 @Tag(name = "Review", description = "Review management APIs")
 public class ReviewController {
-    
+
     private final ReviewService reviewService;
-    
+
     @Operation(summary = "Create a new review", description = "Creates a new review for a project")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Review created successfully"),
@@ -33,7 +35,7 @@ public class ReviewController {
         Review createdReview = reviewService.createReview(review);
         return new ResponseEntity<>(createdReview, HttpStatus.CREATED);
     }
-    
+
     @Operation(summary = "Get review by ID", description = "Retrieves a review by its ID")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Review found"),
@@ -46,7 +48,7 @@ public class ReviewController {
                 .map(review -> new ResponseEntity<>(review, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
-    
+
     @Operation(summary = "Get all reviews", description = "Retrieves all reviews")
     @ApiResponse(responseCode = "200", description = "Reviews retrieved successfully")
     @GetMapping
@@ -54,33 +56,83 @@ public class ReviewController {
         List<Review> reviews = reviewService.getAllReviews();
         return new ResponseEntity<>(reviews, HttpStatus.OK);
     }
-    
+
+    @Operation(summary = "Get paginated reviews with search", description = "Returns a page of reviews with optional search and rating filter")
+    @GetMapping("/page")
+    public ResponseEntity<ReviewPageResponse> getPage(
+            @Parameter(description = "Search in comment (partial match)") @RequestParam(required = false) String search,
+            @Parameter(description = "Filter by rating (1-5)") @RequestParam(required = false) Integer rating,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(reviewService.getPage(search, rating, page, size));
+    }
+
+    @Operation(summary = "Get review statistics (global)")
+    @GetMapping("/stats")
+    public ResponseEntity<ReviewStats> getStats() {
+        return ResponseEntity.ok(reviewService.getStats());
+    }
+
     @GetMapping("/reviewer/{reviewerId}")
     public ResponseEntity<List<Review>> getReviewsByReviewerId(@PathVariable Long reviewerId) {
         List<Review> reviews = reviewService.getReviewsByReviewerId(reviewerId);
         return new ResponseEntity<>(reviews, HttpStatus.OK);
     }
-    
+
+    @Operation(summary = "Get paginated reviews by reviewer with search")
+    @GetMapping("/reviewer/{reviewerId}/page")
+    public ResponseEntity<ReviewPageResponse> getPageByReviewerId(
+            @PathVariable Long reviewerId,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Integer rating,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(reviewService.getPageByReviewerId(reviewerId, search, rating, page, size));
+    }
+
+    @Operation(summary = "Get review statistics for a reviewer")
+    @GetMapping("/stats/reviewer/{reviewerId}")
+    public ResponseEntity<ReviewStats> getStatsByReviewer(@PathVariable Long reviewerId) {
+        return ResponseEntity.ok(reviewService.getStatsByReviewer(reviewerId));
+    }
+
     @GetMapping("/reviewee/{revieweeId}")
     public ResponseEntity<List<Review>> getReviewsByRevieweeId(@PathVariable Long revieweeId) {
         List<Review> reviews = reviewService.getReviewsByRevieweeId(revieweeId);
         return new ResponseEntity<>(reviews, HttpStatus.OK);
     }
-    
+
+    @Operation(summary = "Get paginated reviews by reviewee with search")
+    @GetMapping("/reviewee/{revieweeId}/page")
+    public ResponseEntity<ReviewPageResponse> getPageByRevieweeId(
+            @PathVariable Long revieweeId,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Integer rating,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(reviewService.getPageByRevieweeId(revieweeId, search, rating, page, size));
+    }
+
+    @Operation(summary = "Get review statistics for a reviewee")
+    @GetMapping("/stats/reviewee/{revieweeId}")
+    public ResponseEntity<ReviewStats> getStatsByReviewee(@PathVariable Long revieweeId) {
+        return ResponseEntity.ok(reviewService.getStatsByReviewee(revieweeId));
+    }
+
     @GetMapping("/project/{projectId}")
     public ResponseEntity<List<Review>> getReviewsByProjectId(@PathVariable Long projectId) {
         List<Review> reviews = reviewService.getReviewsByProjectId(projectId);
         return new ResponseEntity<>(reviews, HttpStatus.OK);
     }
-    
+
     @GetMapping("/reviewee/{revieweeId}/project/{projectId}")
     public ResponseEntity<List<Review>> getReviewsByRevieweeAndProject(
-            @PathVariable Long revieweeId, 
+            @PathVariable Long revieweeId,
             @PathVariable Long projectId) {
         List<Review> reviews = reviewService.getReviewsByRevieweeAndProject(revieweeId, projectId);
         return new ResponseEntity<>(reviews, HttpStatus.OK);
     }
-    
+
     @Operation(summary = "Update a review", description = "Updates an existing review by ID")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Review updated successfully"),
@@ -88,7 +140,7 @@ public class ReviewController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<Review> updateReview(
-            @Parameter(description = "ID of the review to update") @PathVariable Long id, 
+            @Parameter(description = "ID of the review to update") @PathVariable Long id,
             @RequestBody Review review) {
         try {
             Review updatedReview = reviewService.updateReview(id, review);
@@ -97,7 +149,7 @@ public class ReviewController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-    
+
     @Operation(summary = "Delete a review", description = "Deletes a review by ID")
     @ApiResponse(responseCode = "204", description = "Review deleted successfully")
     @DeleteMapping("/{id}")

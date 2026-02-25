@@ -1,22 +1,63 @@
 <div class="reviews-container">
   <div class="reviews-header">
     <h2 class="section-title">Reviews about me</h2>
+    <p class="section-subtitle">What others have said about working with you.</p>
   </div>
+
+  @if (stats) {
+    <div class="stats-cards">
+      <div class="stat-card">
+        <span class="stat-value">{{ stats.totalCount }}</span>
+        <span class="stat-label">Total received</span>
+      </div>
+      <div class="stat-card stat-card--avg">
+        <span class="stat-value"><app-star-rating [rating]="roundedAverageRating" [showValue]="true"></app-star-rating></span>
+        <span class="stat-label">Average rating ({{ stats.averageRating | number:'1.1-1' }})</span>
+      </div>
+      @for (r of [5,4,3,2,1]; track r) {
+        <div class="stat-card stat-card--rating">
+          <span class="stat-value">{{ stats.countByRating[r] ?? 0 }}</span>
+          <span class="stat-label">{{ r }} star(s)</span>
+        </div>
+      }
+    </div>
+  }
+
   <div class="toolbar">
-    <span class="toolbar-count">{{ reviews.length }} review(s)</span>
-    <button type="button" class="btn-refresh" (click)="load()" [disabled]="loading">Refresh</button>
+    <div class="toolbar-filters">
+      <input
+        type="search"
+        class="search-input"
+        placeholder="Search in comments..."
+        [value]="searchTerm"
+        (input)="onSearchInput($any($event.target).value)"
+      />
+      <select class="filter-select" [value]="ratingFilter === null ? '' : ratingFilter" (change)="ratingFilter = $any($event.target).value === '' ? null : +$any($event.target).value; onRatingFilterChange()">
+        @for (opt of ratingOptions; track opt.label) {
+          <option [value]="opt.value === null ? '' : opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="toolbar-meta">
+      <span class="toolbar-count">{{ totalElements }} review(s)</span>
+      <button type="button" class="btn-refresh" (click)="load(); loadStats()" [disabled]="loading">
+        {{ loading ? 'Loading…' : 'Refresh' }}
+      </button>
+    </div>
   </div>
+
   <div class="loading-state" *ngIf="loading"><p>Loading reviews...</p></div>
   <div class="error-state" *ngIf="errorMessage && !loading">
     <p class="error">{{ errorMessage }}</p>
     <button (click)="load()" class="btn btn--retry">Try Again</button>
   </div>
+
   <div class="reviews-grid" *ngIf="!loading && !errorMessage && reviews.length > 0">
     <div class="review-card" *ngFor="let r of reviews">
       <div class="review-content">
         <div class="review-header">
           <h3 class="review-title">From {{ getReviewerName(r) }}</h3>
-          <span class="rating-badge">{{ r.rating }}/5</span>
+          <app-star-rating [rating]="r.rating" [showValue]="true"></app-star-rating>
         </div>
         <p class="review-meta">Project: {{ getProjectTitle(r) }}</p>
         <p class="review-comment" *ngIf="r.comment">{{ r.comment }}</p>
@@ -25,6 +66,27 @@
       </div>
     </div>
   </div>
+
+  @if (!loading && !errorMessage && reviews.length > 0 && totalPages > 1) {
+    <div class="pagination">
+      <div class="pagination-size">
+        <label for="pageSize">Per page</label>
+        <select id="pageSize" [value]="size" (change)="setPageSize(+$any($event.target).value)">
+          @for (s of pageSizes; track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+      </div>
+      <div class="pagination-nav">
+        <button type="button" class="btn-page" [disabled]="page === 0" (click)="goToPage(0)">First</button>
+        <button type="button" class="btn-page" [disabled]="page === 0" (click)="goToPage(page - 1)">Previous</button>
+        <span class="pagination-info">Page {{ page + 1 }} of {{ totalPages }}</span>
+        <button type="button" class="btn-page" [disabled]="page >= totalPages - 1" (click)="goToPage(page + 1)">Next</button>
+        <button type="button" class="btn-page" [disabled]="page >= totalPages - 1" (click)="goToPage(totalPages - 1)">Last</button>
+      </div>
+    </div>
+  }
+
   <div class="empty-state" *ngIf="!loading && !errorMessage && reviews.length === 0">
     <span class="empty-icon">⭐</span>
     <p>No one has left you a review yet.</p>

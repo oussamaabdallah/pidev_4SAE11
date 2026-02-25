@@ -1,0 +1,29 @@
+@import '../../../../styles/variables';
+
+.star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 1rem;
+  line-height: 1;
+
+  .star {
+    color: $neutral-300;
+    transition: color 0.15s ease;
+
+    &.star--filled {
+      color: $warning-600;
+    }
+
+    &.star--empty {
+      color: $neutral-300;
+    }
+  }
+
+  .star-rating-value {
+    margin-left: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $neutral-600;
+  }
+}

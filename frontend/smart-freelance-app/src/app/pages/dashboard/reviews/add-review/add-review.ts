@@ -59,14 +59,16 @@ export class AddReview implements OnInit {
       return;
     }
     this.userService.getByEmail(email).subscribe((user) => {
-      this.currentUser = user ?? null;
-      if (!this.currentUser) {
-        this.submitError = 'Could not load your profile.';
+      // Defer to next tick so currentUser is not updated during change detection (fixes NG0100)
+      setTimeout(() => {
+        this.currentUser = user ?? null;
+        if (!this.currentUser) {
+          this.submitError = 'Could not load your profile.';
+        } else if (!this.fromProject) {
+          this.loadProjectOptions();
+        }
         this.cdr.detectChanges();
-        return;
-      }
-      if (!this.fromProject) this.loadProjectOptions();
-      else this.cdr.detectChanges();
+      }, 0);
     });
   }
 
@@ -87,25 +89,37 @@ export class AddReview implements OnInit {
       ? this.projectService.getByFreelancerId(this.currentUser.id)
       : of([] as Project[]);
     const projects$ = this.currentUser.role === 'CLIENT' ? byClient : byFreelancer;
-    projects$.subscribe((projects: Project[] | undefined) => {
-      this.reviewService.getByReviewerId(this.currentUser!.id).subscribe((myReviews) => {
-        const reviewedProjectIds = new Set((myReviews ?? []).map((r) => r.projectId));
-        const options: { project: Project; revieweeId: number; label: string }[] = [];
-        (projects ?? []).forEach((p: Project) => {
-          if (reviewedProjectIds.has(Number(p.id))) return;
-          const revieweeId = this.currentUser!.role === 'CLIENT'
-            ? p.freelancerId
-            : p.clientId;
-          if (revieweeId == null) return;
-          const label = p.title + ' (Project #' + p.id + ')';
-          options.push({ project: p, revieweeId: Number(revieweeId), label });
+    projects$.subscribe({
+      next: (projects: Project[] | undefined) => {
+        this.reviewService.getByReviewerId(this.currentUser!.id).subscribe({
+          next: (myReviews) => {
+            const reviewedProjectIds = new Set((myReviews ?? []).map((r) => r.projectId));
+            const options: { project: Project; revieweeId: number; label: string }[] = [];
+            (projects ?? []).forEach((p: Project) => {
+              if (reviewedProjectIds.has(Number(p.id))) return;
+              const revieweeId = this.currentUser!.role === 'CLIENT'
+                ? p.freelancerId
+                : p.clientId;
+              if (revieweeId == null) return;
+              const label = p.title + ' (Project #' + p.id + ')';
+              options.push({ project: p, revieweeId: Number(revieweeId), label });
+            });
+            this.projectOptions = options;
+            if (options.length === 1 && !this.fromProject) {
+              this.form.patchValue({ projectId: options[0].project.id });
+            }
+            this.cdr.detectChanges();
+          },
+          error: () => {
+            this.projectOptions = [];
+            this.cdr.detectChanges();
+          },
         });
-        this.projectOptions = options;
-        if (options.length === 1 && !this.fromProject) {
-          this.form.patchValue({ projectId: options[0].project.id });
-        }
+      },
+      error: () => {
+        this.projectOptions = [];
         this.cdr.detectChanges();
-      });
+      },
     });
   }
 
