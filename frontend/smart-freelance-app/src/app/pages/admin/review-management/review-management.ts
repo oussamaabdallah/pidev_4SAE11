@@ -1,17 +1,20 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ReviewService, Review } from '../../../core/services/review.service';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { ReviewService, Review, ReviewStats } from '../../../core/services/review.service';
 import { Card } from '../../../shared/components/card/card';
+import { StarRating } from '../../../shared/components/star-rating/star-rating';
 
 @Component({
   selector: 'app-review-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, Card],
+  imports: [CommonModule, ReactiveFormsModule, Card, StarRating],
   templateUrl: './review-management.html',
   styleUrl: './review-management.scss',
 })
-export class ReviewManagement implements OnInit {
+export class ReviewManagement implements OnInit, OnDestroy {
   reviews: Review[] = [];
   loading = true;
   errorMessage = '';
@@ -23,6 +26,15 @@ export class ReviewManagement implements OnInit {
   editingReview: Review | null = null;
   saving = false;
   adding = false;
+  stats: ReviewStats | null = null;
+  searchTerm = '';
+  ratingFilter: number | null = null;
+  page = 0;
+  size = 10;
+  totalElements = 0;
+  totalPages = 0;
+  pageSizes = [5, 10, 20, 50];
+  private searchSubject = new Subject<string>();
 
   constructor(
     private reviewService: ReviewService,
@@ -46,24 +58,92 @@ export class ReviewManagement implements OnInit {
   }
 
   ngOnInit(): void {
+    this.searchSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe((term) => {
+      this.searchTerm = term;
+      this.page = 0;
+      this.loadReviews();
+    });
     this.loadReviews();
+    this.loadStats();
+  }
+
+  ngOnDestroy(): void {
+    this.searchSubject.complete();
+  }
+
+  onSearchInput(value: string): void {
+    this.searchSubject.next(value);
+  }
+
+  onRatingFilterChange(): void {
+    this.page = 0;
+    this.loadReviews();
+  }
+
+  loadStats(): void {
+    this.reviewService.getStats().subscribe((s) => {
+      this.stats = s ?? null;
+      this.cdr.detectChanges();
+    });
   }
 
   loadReviews(): void {
     this.loading = true;
     this.errorMessage = '';
-    this.reviewService.getAll().subscribe({
-      next: (list) => {
-        this.reviews = list ?? [];
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.errorMessage = 'Failed to load reviews.';
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-    });
+    this.reviewService
+      .getPage({
+        page: this.page,
+        size: this.size,
+        search: this.searchTerm || undefined,
+        rating: this.ratingFilter ?? undefined,
+      })
+      .subscribe({
+        next: (res) => {
+          if (res) {
+            this.reviews = res.content ?? [];
+            this.totalElements = res.totalElements;
+            this.totalPages = res.totalPages;
+          } else {
+            this.reviews = [];
+            this.totalElements = 0;
+            this.totalPages = 0;
+          }
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.errorMessage = 'Failed to load reviews.';
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  goToPage(p: number): void {
+    if (p < 0 || p >= this.totalPages) return;
+    this.page = p;
+    this.loadReviews();
+  }
+
+  setPageSize(newSize: number): void {
+    this.size = newSize;
+    this.page = 0;
+    this.loadReviews();
+  }
+
+  get roundedAverageRating(): number {
+    return this.stats ? Math.round(this.stats.averageRating) : 0;
+  }
+
+  get ratingOptions(): { value: number | null; label: string }[] {
+    return [
+      { value: null, label: 'All ratings' },
+      { value: 5, label: '5 stars' },
+      { value: 4, label: '4 stars' },
+      { value: 3, label: '3 stars' },
+      { value: 2, label: '2 stars' },
+      { value: 1, label: '1 star' },
+    ];
   }
 
   openAdd(): void {
@@ -102,6 +182,7 @@ export class ReviewManagement implements OnInit {
         if (created) {
           this.addModalOpen = false;
           this.loadReviews();
+          this.loadStats();
         } else this.errorMessage = 'Failed to create review.';
         this.cdr.detectChanges();
       },
@@ -174,8 +255,10 @@ export class ReviewManagement implements OnInit {
       next: (ok) => {
         this.deleting = false;
         this.reviewToDelete = null;
-        if (ok) this.loadReviews();
-        else this.errorMessage = 'Failed to delete review.';
+        if (ok) {
+          this.loadReviews();
+          this.loadStats();
+        } else this.errorMessage = 'Failed to delete review.';
         this.cdr.detectChanges();
       },
       error: () => {

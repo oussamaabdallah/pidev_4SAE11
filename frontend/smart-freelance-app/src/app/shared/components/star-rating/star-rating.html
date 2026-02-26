@@ -1,0 +1,8 @@
+<span class="star-rating" aria-label="{{ rating }} out of {{ maxStars }} stars">
+  @for (i of stars; track i) {
+    <span class="star" [class.star--filled]="filled(i)" [class.star--empty]="!filled(i)">★</span>
+  }
+  @if (showValue) {
+    <span class="star-rating-value">{{ rating }}/{{ maxStars }}</span>
+  }
+</span>

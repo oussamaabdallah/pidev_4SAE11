@@ -1,12 +1,16 @@
 @import '../../../../../styles/variables';
 
-// ── edit-review uses the same styles as add-review ──────────────────
+// ════════════════════════════════════════════════════════════════
+// EDIT REVIEW — Matches Add Review form
+// ════════════════════════════════════════════════════════════════
 
 .review-form-page {
   max-width: 640px;
-  padding: $spacing-3xl $spacing-lg;
+  padding: $spacing-2xl $spacing-lg;
   margin: 0 auto;
   font-family: $font-family;
+  min-height: 60vh;
+  background: linear-gradient(180deg, $neutral-50 0%, $white 15%);
 
   @include breakpoint(md) {
     padding: $spacing-3xl $spacing-2xl;
@@ -17,37 +21,43 @@
   margin: 0 0 $spacing-xs;
   font-size: $font-size-3xl;
   font-weight: $font-weight-extrabold;
+  letter-spacing: $letter-spacing-tight;
   background: $gradient-primary;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  line-height: $line-height-tight;
 }
 
 .subtitle {
   color: $neutral-500;
-  margin-bottom: $spacing-xl;
-  font-size: $font-size-sm;
+  margin-bottom: $spacing-2xl;
+  font-size: $font-size-base;
+  line-height: $line-height-relaxed;
 }
 
 .loading-msg {
   color: $neutral-500;
-  font-size: $font-size-sm;
-  padding: $spacing-xl;
+  font-size: $font-size-base;
+  padding: $spacing-2xl;
   text-align: center;
+  background: $white;
+  border-radius: $radius-xl;
+  border: 1px solid $neutral-200;
 }
 
 .error-banner {
   display: flex;
   align-items: center;
   gap: $spacing-sm;
-  padding: $spacing-md $spacing-lg;
-  margin-bottom: $spacing-lg;
+  padding: $spacing-md $spacing-xl;
+  margin-bottom: $spacing-xl;
   background: $error-50;
-  border: 1.5px solid rgba($error-500, 0.25);
+  border: 1px solid rgba($error-500, 0.2);
   border-radius: $radius-xl;
   color: $error-700;
   font-size: $font-size-sm;
-
+  font-weight: $font-weight-medium;
   &::before { content: '⚠ '; }
 }
 
@@ -55,26 +65,29 @@
   display: flex;
   align-items: center;
   gap: $spacing-sm;
-  padding: $spacing-md $spacing-lg;
-  margin-bottom: $spacing-lg;
+  padding: $spacing-md $spacing-xl;
+  margin-bottom: $spacing-xl;
   background: $success-50;
-  border: 1.5px solid rgba($success-500, 0.25);
+  border: 1px solid rgba($success-500, 0.2);
   border-radius: $radius-xl;
   color: $success-700;
   font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
 }
 
 .review-form {
   background: $white;
-  border-radius: $radius-xl;
-  border: 1.5px solid $neutral-200;
-  padding: $spacing-xl;
+  border-radius: $radius-2xl;
+  border: 1px solid $neutral-200;
+  padding: $spacing-2xl;
+  box-shadow: $shadow-md;
 
-  .field { margin-bottom: $spacing-lg; }
+  .field { margin-bottom: $spacing-xl; }
+  .field:last-of-type { margin-bottom: 0; }
 
   label {
     display: block;
-    margin-bottom: $spacing-xs;
+    margin-bottom: $spacing-sm;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     color: $neutral-700;
@@ -83,15 +96,15 @@
   .form-select,
   textarea {
     width: 100%;
-    padding: $spacing-sm $spacing-md;
-    font-size: $font-size-sm;
+    padding: $spacing-md $spacing-lg;
+    font-size: $font-size-base;
     font-family: $font-family;
-    border: 1.5px solid $neutral-300;
+    border: 1px solid $neutral-300;
     border-radius: $radius-lg;
     box-sizing: border-box;
     background: $white;
     color: $neutral-900;
-    transition: $transition-fast;
+    transition: border-color $transition-fast, box-shadow $transition-fast;
 
     &:focus {
       outline: none;
@@ -105,24 +118,24 @@
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right $spacing-md center;
-    padding-right: $spacing-2xl;
+    background-position: right $spacing-lg center;
+    padding-right: $spacing-3xl;
   }
 
-  textarea { resize: vertical; min-height: 100px; }
+  textarea { resize: vertical; min-height: 120px; line-height: $line-height-relaxed; }
 
   .field-error {
     display: block;
-    margin-top: $spacing-xs;
+    margin-top: $spacing-sm;
     font-size: $font-size-xs;
     color: $error-600;
-
+    font-weight: $font-weight-medium;
     &::before { content: '⚠ '; }
   }
 
   .field-hint {
     display: block;
-    margin-top: $spacing-xs;
+    margin-top: $spacing-sm;
     font-size: $font-size-xs;
     color: $neutral-400;
     text-align: right;
@@ -132,39 +145,40 @@
 .form-actions {
   display: flex;
   gap: $spacing-md;
-  margin-top: $spacing-xl;
-  padding-top: $spacing-lg;
-  border-top: 1.5px solid $neutral-100;
+  margin-top: $spacing-2xl;
+  padding-top: $spacing-xl;
+  border-top: 1px solid $neutral-100;
   justify-content: flex-end;
 }
 
 .btn-secondary {
-  padding: $spacing-sm $spacing-lg;
+  padding: $spacing-md $spacing-xl;
   font-weight: $font-weight-semibold;
-  border-radius: $radius-full;
+  border-radius: $radius-lg;
   cursor: pointer;
   background: transparent;
   color: $neutral-600;
-  border: 1.5px solid $neutral-300;
+  border: 1px solid $neutral-300;
   font-size: $font-size-sm;
   display: inline-flex;
   align-items: center;
-  transition: $transition-base;
-
-  &:hover:not(:disabled) { background: $neutral-100; border-color: $neutral-400; }
+  transition: all $transition-base;
+  &:hover:not(:disabled) { background: $neutral-50; border-color: $neutral-400; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 
 .btn-primary {
-  padding: $spacing-sm $spacing-lg;
+  padding: $spacing-md $spacing-xl;
   font-weight: $font-weight-semibold;
-  border-radius: $radius-full;
+  border-radius: $radius-lg;
   cursor: pointer;
   font-size: $font-size-sm;
   @include button-gradient;
-  box-shadow: 0 2px 8px rgba($primary-500, 0.35);
-  transition: $transition-base;
-
-  &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: $shadow-primary; }
+  box-shadow: 0 2px 12px rgba($primary-500, 0.35);
+  transition: transform $transition-base, box-shadow $transition-base;
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba($primary-500, 0.4);
+  }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }

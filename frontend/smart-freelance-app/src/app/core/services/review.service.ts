@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, map, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -15,13 +15,84 @@ export interface Review {
   createdAt?: string;
 }
 
+export interface ReviewPageResponse {
+  content: Review[];
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
+export interface ReviewStats {
+  totalCount: number;
+  averageRating: number;
+  countByRating: Record<number, number>;
+}
+
+export interface ReviewPageParams {
+  page?: number;
+  size?: number;
+  search?: string;
+  rating?: number | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ReviewService {
   constructor(private http: HttpClient) {}
 
+  private buildPageParams(params: ReviewPageParams): HttpParams {
+    let p = new HttpParams();
+    if (params.page != null) p = p.set('page', params.page);
+    if (params.size != null) p = p.set('size', params.size);
+    if (params.search != null && params.search.trim() !== '') p = p.set('search', params.search.trim());
+    if (params.rating != null && params.rating >= 1 && params.rating <= 5) p = p.set('rating', params.rating);
+    return p;
+  }
+
   getAll(): Observable<Review[]> {
     return this.http.get<Review[]>(REVIEW_API).pipe(
       catchError(() => of([]))
+    );
+  }
+
+  getPage(params: ReviewPageParams = {}): Observable<ReviewPageResponse | null> {
+    const httpParams = this.buildPageParams({ page: 0, size: 10, ...params });
+    return this.http.get<ReviewPageResponse>(`${REVIEW_API}/page`, { params: httpParams }).pipe(
+      catchError(() => of(null))
+    );
+  }
+
+  getByReviewerIdPage(reviewerId: number, params: ReviewPageParams = {}): Observable<ReviewPageResponse | null> {
+    const httpParams = this.buildPageParams({ page: 0, size: 10, ...params });
+    return this.http.get<ReviewPageResponse>(`${REVIEW_API}/reviewer/${reviewerId}/page`, { params: httpParams }).pipe(
+      catchError(() => of(null))
+    );
+  }
+
+  getByRevieweeIdPage(revieweeId: number, params: ReviewPageParams = {}): Observable<ReviewPageResponse | null> {
+    const httpParams = this.buildPageParams({ page: 0, size: 10, ...params });
+    return this.http.get<ReviewPageResponse>(`${REVIEW_API}/reviewee/${revieweeId}/page`, { params: httpParams }).pipe(
+      catchError(() => of(null))
+    );
+  }
+
+  getStats(): Observable<ReviewStats | null> {
+    return this.http.get<ReviewStats>(`${REVIEW_API}/stats`).pipe(
+      catchError(() => of(null))
+    );
+  }
+
+  getStatsByReviewer(reviewerId: number): Observable<ReviewStats | null> {
+    return this.http.get<ReviewStats>(`${REVIEW_API}/stats/reviewer/${reviewerId}`).pipe(
+      catchError(() => of(null))
+    );
+  }
+
+  getStatsByReviewee(revieweeId: number): Observable<ReviewStats | null> {
+    return this.http.get<ReviewStats>(`${REVIEW_API}/stats/reviewee/${revieweeId}`).pipe(
+      catchError(() => of(null))
     );
   }
 

@@ -658,7 +658,11 @@
     margin-top: 1rem;
   }
 
+<<<<<<< HEAD
   .btn--add-offer { display: inline-flex; margin-top: 0; }
+=======
+  .btn--add-offer { display: inline-flex; margin-top: $spacing-md; }
+>>>>>>> d18f2048fdef2a1b8f5af01cdd13f69e1cfe3130
 }
 
 // ── Confirm Modals ─────────────────────────────────────────────────

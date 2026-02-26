@@ -1,28 +1,76 @@
 <div class="admin-management-page">
-  <h1>Review Management</h1>
-  <p class="subtitle">Manage reviews (Review microservice)</p>
+  <header class="page-header">
+    <h1>Review Management</h1>
+    <p class="subtitle">View, search, and manage all platform reviews in one place.</p>
+  </header>
 
   @if (errorMessage) {
     <div class="error-banner" role="alert">{{ errorMessage }}</div>
   }
 
-  <app-card>
+  @if (stats) {
+    <section class="stats-section" aria-label="Review statistics">
+      <div class="stats-cards">
+        <div class="stat-card stat-card--total">
+          <span class="stat-value">{{ stats.totalCount }}</span>
+          <span class="stat-label">Total reviews</span>
+        </div>
+        <div class="stat-card stat-card--avg">
+          <span class="stat-value stat-value--stars"><app-star-rating [rating]="roundedAverageRating" [showValue]="true"></app-star-rating></span>
+          <span class="stat-label">Average ({{ stats.averageRating | number:'1.1-1' }})</span>
+        </div>
+        @for (r of [5,4,3,2,1]; track r) {
+          <div class="stat-card stat-card--rating">
+            <span class="stat-value">{{ stats.countByRating[r] ?? 0 }}</span>
+            <span class="stat-label">{{ r }} star(s)</span>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <section class="content-card">
     <div class="toolbar">
-      <span class="count">{{ reviews.length }} review(s)</span>
-      <div class="toolbar-actions">
-        <button type="button" class="btn-add" (click)="openAdd()">Add review</button>
-        <button type="button" class="btn-refresh" (click)="loadReviews()" [disabled]="loading">
-          {{ loading ? 'Loading…' : 'Refresh' }}
-        </button>
+      <div class="toolbar-filters">
+        <input
+          type="search"
+          class="search-input"
+          placeholder="Search in comments..."
+          [value]="searchTerm"
+          (input)="onSearchInput($any($event.target).value)"
+        />
+        <select class="filter-select" [value]="ratingFilter === null ? '' : ratingFilter" (change)="ratingFilter = $any($event.target).value === '' ? null : +$any($event.target).value; onRatingFilterChange()">
+          @for (opt of ratingOptions; track opt.label) {
+            <option [value]="opt.value === null ? '' : opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="toolbar-meta">
+        <span class="count">{{ totalElements }} review(s)</span>
+        <div class="toolbar-actions">
+          <button type="button" class="btn-add" (click)="openAdd()">Add review</button>
+          <button type="button" class="btn-refresh" (click)="loadReviews(); loadStats()" [disabled]="loading">
+            {{ loading ? 'Loading…' : 'Refresh' }}
+          </button>
+        </div>
       </div>
     </div>
 
     @if (loading && reviews.length === 0) {
-      <p class="loading-msg">Loading reviews…</p>
+      <div class="loading-state">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p class="loading-msg">Loading reviews…</p>
+      </div>
     } @else if (reviews.length === 0) {
-      <p class="empty-msg">No reviews found.</p>
+      <div class="empty-state">
+        <span class="empty-icon" aria-hidden="true">📋</span>
+        <p class="empty-title">No reviews found</p>
+        <p class="empty-desc">Try adjusting your search or filters, or add a new review.</p>
+      </div>
     } @else {
-      <div class="table-wrap">
+      <div class="table-section">
+        <h2 class="table-section-title">All reviews</h2>
+        <div class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
@@ -43,7 +91,7 @@
                 <td>{{ r.reviewerId }}</td>
                 <td>{{ r.revieweeId }}</td>
                 <td>{{ r.projectId }}</td>
-                <td>{{ r.rating }}</td>
+                <td><app-star-rating [rating]="r.rating" [showValue]="true"></app-star-rating></td>
                 <td class="comment-cell">{{ (r.comment || '—') | slice:0:60 }}{{ (r.comment && r.comment.length > 60) ? '…' : '' }}</td>
                 <td>{{ r.createdAt | date:'short' }}</td>
                 <td class="actions">
@@ -54,9 +102,30 @@
             }
           </tbody>
         </table>
+        </div>
       </div>
+
+      @if (totalPages > 1) {
+        <div class="pagination">
+          <div class="pagination-size">
+            <label for="pageSize">Per page</label>
+            <select id="pageSize" [value]="size" (change)="setPageSize(+$any($event.target).value)">
+              @for (s of pageSizes; track s) {
+                <option [value]="s">{{ s }}</option>
+              }
+            </select>
+          </div>
+          <div class="pagination-nav">
+            <button type="button" class="btn-page" [disabled]="page === 0" (click)="goToPage(0)">First</button>
+            <button type="button" class="btn-page" [disabled]="page === 0" (click)="goToPage(page - 1)">Previous</button>
+            <span class="pagination-info">Page {{ page + 1 }} of {{ totalPages }}</span>
+            <button type="button" class="btn-page" [disabled]="page >= totalPages - 1" (click)="goToPage(page + 1)">Next</button>
+            <button type="button" class="btn-page" [disabled]="page >= totalPages - 1" (click)="goToPage(totalPages - 1)">Last</button>
+          </div>
+        </div>
+      }
     }
-  </app-card>
+  </section>
 
   @if (addModalOpen) {
     <div class="modal-overlay" (click)="closeAdd()">

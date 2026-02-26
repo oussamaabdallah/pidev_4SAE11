@@ -1,14 +1,16 @@
 @import '../../../../../styles/variables';
 
 // ════════════════════════════════════════════════════════════════
-// MY REVIEWS
+// MY REVIEWS — Professional dashboard layout
 // ════════════════════════════════════════════════════════════════
 
 .reviews-container {
-  max-width: 1200px;
-  padding: $spacing-3xl $spacing-lg;
+  max-width: 1120px;
+  padding: $spacing-2xl $spacing-lg;
   margin: 0 auto;
   font-family: $font-family;
+  min-height: 60vh;
+  background: linear-gradient(180deg, $neutral-50 0%, $white 12%);
 
   @include breakpoint(md) {
     padding: $spacing-3xl $spacing-2xl;
@@ -19,37 +21,125 @@
 .reviews-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
-  gap: $spacing-md;
-  margin-bottom: $spacing-xl;
+  gap: $spacing-lg;
+  margin-bottom: $spacing-2xl;
+}
+
+.reviews-header-text {
+  .section-subtitle {
+    margin: 0;
+    font-size: $font-size-base;
+    color: $neutral-500;
+    margin-top: $spacing-xs;
+  }
 }
 
 .section-title {
-  margin: 0;
+  margin: 0 0 $spacing-xs;
   font-size: $font-size-3xl;
   font-weight: $font-weight-extrabold;
+  letter-spacing: $letter-spacing-tight;
   background: $gradient-primary;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  line-height: $line-height-tight;
 }
 
-// ── Add Button ─────────────────────────────────────────────────────
+.reviews-header-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.btn--secondary {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-sm $spacing-lg;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-decoration: none;
+  color: $neutral-600;
+  background: $white;
+  border: 1px solid $neutral-300;
+  border-radius: $radius-full;
+  transition: background $transition-base, border-color $transition-base, color $transition-base;
+
+  &:hover {
+    background: $neutral-50;
+    border-color: $neutral-400;
+    color: $neutral-800;
+  }
+}
+
 .btn--add {
   display: inline-flex;
   align-items: center;
-  gap: $spacing-xs;
-  padding: $spacing-sm $spacing-lg;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-xl;
   @include button-gradient;
   border-radius: $radius-full;
   font-weight: $font-weight-semibold;
   font-size: $font-size-sm;
   text-decoration: none;
-  box-shadow: 0 2px 8px rgba($primary-500, 0.35);
-  transition: $transition-base;
+  color: $white;
+  box-shadow: 0 2px 12px rgba($primary-500, 0.35);
+  transition: transform $transition-base, box-shadow $transition-base;
 
-  &:hover { transform: translateY(-1px); box-shadow: $shadow-primary; }
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba($primary-500, 0.4);
+  }
+}
+
+// ── Stats cards ─────────────────────────────────────────────────────
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: $spacing-md;
+  margin-bottom: $spacing-2xl;
+}
+
+.stat-card {
+  background: $white;
+  border-radius: $radius-xl;
+  padding: $spacing-lg $spacing-md;
+  border: 1px solid $neutral-200;
+  text-align: center;
+  transition: box-shadow $transition-base, border-color $transition-base;
+  box-shadow: $shadow-xs;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    border-color: $neutral-300;
+  }
+
+  .stat-value {
+    display: block;
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-bold;
+    color: $neutral-900;
+    letter-spacing: $letter-spacing-tight;
+    margin-bottom: $spacing-xs;
+  }
+
+  .stat-label {
+    font-size: $font-size-xs;
+    color: $neutral-500;
+    font-weight: $font-weight-medium;
+  }
+
+  &.stat-card--avg {
+    border-left: 4px solid $primary-500;
+    .stat-value { color: $primary-600; }
+  }
+
+  &.stat-card--rating .stat-value {
+    color: $warning-600;
+  }
 }
 
 // ── Toolbar ────────────────────────────────────────────────────────
@@ -57,88 +147,179 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: $spacing-lg;
+  margin-bottom: $spacing-xl;
   flex-wrap: wrap;
   gap: $spacing-md;
+  padding: $spacing-md 0;
+}
 
-  .toolbar-count {
-    font-weight: $font-weight-semibold;
-    color: $neutral-500;
-    font-size: $font-size-sm;
+.toolbar-filters {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  padding: $spacing-sm $spacing-lg;
+  font-size: $font-size-sm;
+  border: 1px solid $neutral-300;
+  border-radius: $radius-full;
+  min-width: 220px;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+  background: $white;
+
+  &::placeholder { color: $neutral-400; }
+  &:focus {
+    outline: none;
+    border-color: $primary-500;
+    box-shadow: 0 0 0 3px rgba($primary-500, 0.12);
   }
+}
 
-  .btn-refresh {
-    padding: $spacing-xs $spacing-md;
-    font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
-    color: $neutral-600;
-    background: transparent;
-    border: 1.5px solid $neutral-300;
-    border-radius: $radius-full;
-    cursor: pointer;
-    transition: $transition-base;
+.filter-select {
+  padding: $spacing-sm $spacing-lg;
+  font-size: $font-size-sm;
+  border: 1px solid $neutral-300;
+  border-radius: $radius-full;
+  background: $white;
+  cursor: pointer;
+  transition: border-color $transition-fast;
 
-    &:hover:not(:disabled) { background: $neutral-100; border-color: $neutral-400; }
-    &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &:focus { outline: none; border-color: $primary-500; }
+}
+
+.toolbar-meta {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.toolbar-count {
+  font-weight: $font-weight-semibold;
+  color: $neutral-600;
+  font-size: $font-size-sm;
+}
+
+.btn-refresh {
+  padding: $spacing-sm $spacing-lg;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-600;
+  background: $white;
+  border: 1px solid $neutral-300;
+  border-radius: $radius-full;
+  cursor: pointer;
+  transition: all $transition-base;
+
+  &:hover:not(:disabled) {
+    background: $neutral-50;
+    border-color: $neutral-400;
+    color: $neutral-800;
   }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 
 // ── Loading / Error ────────────────────────────────────────────────
-.loading-state,
+.loading-state {
+  padding: $spacing-3xl $spacing-xl;
+  text-align: center;
+  background: $white;
+  border-radius: $radius-xl;
+  border: 1px solid $neutral-200;
+  box-shadow: $shadow-sm;
+
+  p {
+    color: $neutral-500;
+    font-size: $font-size-base;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-sm;
+  }
+
+  p::before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    border: 2px solid $neutral-300;
+    border-top-color: $primary-500;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .error-state {
   padding: $spacing-xl;
   text-align: center;
+  background: $error-50;
+  border-radius: $radius-xl;
+  border: 1px solid rgba($error-500, 0.2);
 
-  .error { color: $error-600; margin-bottom: $spacing-md; font-size: $font-size-sm; }
+  .error {
+    color: $error-700;
+    margin-bottom: $spacing-md;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+  }
 }
 
 .btn--retry {
-  padding: $spacing-xs $spacing-md;
-  background: $neutral-600;
+  padding: $spacing-sm $spacing-lg;
+  background: $error-500;
   color: $white;
   border: none;
   border-radius: $radius-full;
   cursor: pointer;
-  font-weight: $font-weight-medium;
+  font-weight: $font-weight-semibold;
   font-size: $font-size-sm;
-  transition: $transition-base;
+  transition: background $transition-base;
 
-  &:hover { background: $neutral-700; }
+  &:hover { background: $error-600; }
 }
 
 // ── Reviews Grid ───────────────────────────────────────────────────
 .reviews-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: $spacing-lg;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: $spacing-xl;
 }
 
 // ── Review Card ────────────────────────────────────────────────────
 .review-card {
   background: $white;
-  border-radius: $radius-xl;
-  border: 1.5px solid $neutral-200;
-  transition: $transition-base;
+  border-radius: $radius-2xl;
+  border: 1px solid $neutral-200;
+  box-shadow: $shadow-sm;
+  transition: transform $transition-base, box-shadow $transition-base, border-color $transition-base;
+  overflow: hidden;
 
   &:hover {
-    border-color: $primary-500;
-    box-shadow: 0 6px 24px rgba($primary-500, 0.12);
-    transform: translateY(-2px);
+    border-color: rgba($primary-500, 0.4);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba($primary-500, 0.08);
+    transform: translateY(-3px);
   }
 }
 
-.review-content { padding: $spacing-lg; }
+.review-content {
+  padding: $spacing-xl;
+}
 
 .review-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: $spacing-md;
-  margin-bottom: $spacing-sm;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-md;
+  border-bottom: 1px solid $neutral-100;
 }
 
 .review-title {
-  font-size: $font-size-base;
+  font-size: $font-size-lg;
   font-weight: $font-weight-bold;
   margin: 0;
   color: $neutral-900;
@@ -146,35 +327,26 @@
   flex: 1;
 }
 
-// ── Rating Badge ───────────────────────────────────────────────────
-.rating-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px $spacing-sm;
-  border-radius: $radius-full;
-  font-size: 11px;
-  font-weight: $font-weight-bold;
-  letter-spacing: 0.4px;
-  background: $warning-100;
-  color: $warning-700;
-  white-space: nowrap;
-}
-
 .review-meta {
   font-size: $font-size-xs;
   color: $neutral-500;
-  margin: 0 0 $spacing-sm;
+  margin: 0 0 $spacing-md;
+  font-weight: $font-weight-medium;
 }
 
 .review-comment {
   color: $neutral-700;
   line-height: $line-height-relaxed;
-  margin-bottom: $spacing-sm;
+  margin-bottom: $spacing-md;
   font-size: $font-size-sm;
+  padding-left: $spacing-md;
+  border-left: 3px solid $neutral-200;
+  font-style: italic;
 
   &.empty {
     color: $neutral-400;
     font-style: italic;
+    border-left-color: $neutral-100;
   }
 }
 
@@ -189,81 +361,163 @@
   display: flex;
   flex-wrap: wrap;
   gap: $spacing-sm;
-  margin-top: $spacing-sm;
-  padding-top: $spacing-sm;
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
   border-top: 1px solid $neutral-100;
   justify-content: flex-end;
 
   .btn {
-    padding: $spacing-xs $spacing-md;
+    padding: $spacing-sm $spacing-lg;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    border-radius: $radius-full;
+    border-radius: $radius-lg;
     border: none;
     cursor: pointer;
-    transition: $transition-base;
+    transition: all $transition-base;
     display: inline-flex;
     align-items: center;
     text-decoration: none;
-    min-width: 70px;
+    min-width: 72px;
     justify-content: center;
 
     &:hover { transform: translateY(-1px); }
   }
 
-  .btn--update { background: $success-50; color: $success-700; &:hover { background: $success-500; color: $white; } }
-  .btn--delete { background: $error-50;   color: $error-700;   &:hover { background: $error-500;   color: $white; } }
+  .btn--update {
+    background: $success-50;
+    color: $success-700;
+    &:hover { background: $success-500; color: $white; }
+  }
+  .btn--delete {
+    background: $error-50;
+    color: $error-700;
+    &:hover { background: $error-500; color: $white; }
+  }
+}
+
+// ── Pagination ─────────────────────────────────────────────────────
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+  margin-top: $spacing-2xl;
+  padding: $spacing-xl 0;
+  border-top: 1px solid $neutral-200;
+
+  .pagination-size {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    label { font-size: $font-size-sm; color: $neutral-600; font-weight: $font-weight-medium; }
+    select {
+      padding: $spacing-sm $spacing-md;
+      border: 1px solid $neutral-300;
+      border-radius: $radius-lg;
+      font-size: $font-size-sm;
+      background: $white;
+      cursor: pointer;
+    }
+  }
+
+  .pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+
+  .pagination-info {
+    font-size: $font-size-sm;
+    color: $neutral-600;
+    font-weight: $font-weight-medium;
+  }
+
+  .btn-page {
+    padding: $spacing-sm $spacing-md;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    border: 1px solid $neutral-300;
+    border-radius: $radius-lg;
+    background: $white;
+    cursor: pointer;
+    transition: all $transition-base;
+
+    &:hover:not(:disabled) {
+      background: $neutral-50;
+      border-color: $neutral-400;
+    }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+  }
 }
 
 // ── Empty State ────────────────────────────────────────────────────
 .empty-state {
   text-align: center;
-  padding: $spacing-3xl $spacing-xl;
-  background: $neutral-50;
-  border-radius: $radius-xl;
-  border: 2px dashed $neutral-300;
+  padding: $spacing-4xl $spacing-2xl;
+  background: $white;
+  border-radius: $radius-2xl;
+  border: 2px dashed $neutral-200;
+  box-shadow: $shadow-sm;
 
-  .empty-icon { font-size: 52px; display: block; margin-bottom: $spacing-md; }
-  p           { color: $neutral-500; font-size: $font-size-base; margin: 0 0 $spacing-lg; }
+  .empty-icon {
+    font-size: 64px;
+    display: block;
+    margin-bottom: $spacing-lg;
+    opacity: 0.9;
+  }
 
-  .btn--add { display: inline-flex; margin-top: $spacing-md; }
+  p {
+    color: $neutral-600;
+    font-size: $font-size-base;
+    margin: 0 0 $spacing-xl;
+    font-weight: $font-weight-medium;
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .btn--add {
+    display: inline-flex;
+    margin-top: $spacing-md;
+  }
 }
 
 // ── Confirm Modal ─────────────────────────────────────────────────
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba($neutral-900, 0.5);
+  background: rgba($neutral-900, 0.45);
   @include backdrop-blur;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: $z-modal-backdrop;
-  padding: $spacing-md;
+  padding: $spacing-lg;
   animation: fadeIn $transition-base;
 }
 
 .modal {
   background: $white;
   border-radius: $radius-2xl;
-  padding: $spacing-xl $spacing-2xl;
+  padding: $spacing-2xl;
   max-width: 420px;
   width: 100%;
   box-shadow: $shadow-2xl;
   animation: slideUp $transition-slow;
 
   h3 {
-    margin: 0 0 $spacing-xs;
+    margin: 0 0 $spacing-sm;
     font-size: $font-size-xl;
     font-weight: $font-weight-bold;
     color: $neutral-900;
   }
 
   .modal-message {
-    color: $neutral-700;
+    color: $neutral-600;
     font-size: $font-size-sm;
     line-height: $line-height-relaxed;
-    margin: 0 0 $spacing-lg;
+    margin: 0 0 $spacing-xl;
   }
 
   .modal-actions {
@@ -272,30 +526,30 @@
     justify-content: flex-end;
 
     .btn-secondary {
-      padding: $spacing-sm $spacing-lg;
+      padding: $spacing-sm $spacing-xl;
       font-weight: $font-weight-semibold;
-      border-radius: $radius-full;
+      border-radius: $radius-lg;
       cursor: pointer;
       background: transparent;
       color: $neutral-600;
-      border: 1.5px solid $neutral-300;
+      border: 1px solid $neutral-300;
       font-size: $font-size-sm;
-      transition: $transition-base;
+      transition: all $transition-base;
 
-      &:hover:not(:disabled) { background: $neutral-100; }
+      &:hover:not(:disabled) { background: $neutral-50; border-color: $neutral-400; }
       &:disabled { opacity: 0.6; cursor: not-allowed; }
     }
 
     .btn-danger {
-      padding: $spacing-sm $spacing-lg;
+      padding: $spacing-sm $spacing-xl;
       font-weight: $font-weight-semibold;
-      border-radius: $radius-full;
+      border-radius: $radius-lg;
       font-size: $font-size-sm;
       cursor: pointer;
       background: $error-500;
       color: $white;
       border: none;
-      transition: $transition-base;
+      transition: all $transition-base;
 
       &:hover:not(:disabled) { background: $error-600; transform: translateY(-1px); }
       &:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -303,10 +557,13 @@
   }
 }
 
-@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: $breakpoint-sm) {
   .reviews-header { flex-direction: column; align-items: flex-start; }
-  .btn--add { width: 100%; justify-content: center; }
+  .reviews-header-actions { width: 100%; }
+  .btn--secondary,
+  .btn--add { flex: 1; justify-content: center; min-width: 0; }
+  .reviews-grid { grid-template-columns: 1fr; }
 }

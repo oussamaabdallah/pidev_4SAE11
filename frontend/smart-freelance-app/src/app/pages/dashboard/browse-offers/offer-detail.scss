@@ -428,6 +428,7 @@
   }
 
   .modal {
+<<<<<<< HEAD
     max-width: 480px;
     width: 100%;
     border: 0;
@@ -451,6 +452,17 @@
     overflow: hidden;
     animation: orderSlideUp 0.5s ease-out;
   }
+=======
+    background: $white;
+    border-radius: $radius-2xl;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: $shadow-2xl;
+    animation: slideUp $transition-slow;
+    @include custom-scrollbar;
+>>>>>>> d18f2048fdef2a1b8f5af01cdd13f69e1cfe3130
 
   @keyframes orderSlideUp {
     from { opacity: 0; transform: translateY(30px); }
@@ -662,6 +674,7 @@
       border-color: $order-purple;
       background: linear-gradient(135deg, rgba($order-purple, 0.05) 0%, rgba($order-violet, 0.05) 100%);
     }
+<<<<<<< HEAD
   }
 
   .package-badge {
@@ -896,6 +909,8 @@
     font-size: 13px;
     color: $error-500;
     margin-top: 4px;
+=======
+>>>>>>> d18f2048fdef2a1b8f5af01cdd13f69e1cfe3130
   }
 }
 
