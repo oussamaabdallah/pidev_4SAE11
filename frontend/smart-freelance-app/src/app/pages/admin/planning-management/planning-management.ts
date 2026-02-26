@@ -70,6 +70,9 @@ export class PlanningManagement implements OnInit, OnDestroy {
   projectsForAdd: Project[] = [];
   freelancersForAdd: User[] = [];
 
+  /** Skip first edit form valueChanges after open (avoid overwriting on initial patch) */
+  private editFormInitialPatch = false;
+
   /** Min progress % for Add/Edit (cannot be less than previous update for the project) */
   addMinProgress = 0;
   editMinProgress = 0;
@@ -204,6 +207,70 @@ export class PlanningManagement implements OnInit, OnDestroy {
     ).subscribe((projectId: number | null) => {
       if (projectId != null) {
         this.addForm.patchValue({ projectId }, { emitEvent: false });
+        this.cdr.detectChanges();
+      }
+    });
+    // When project is selected in Edit form, auto-fill freelancer from progress updates or project applications
+    this.editForm.get('projectId')?.valueChanges.pipe(
+      switchMap((projectId: number | null) => {
+        if (projectId == null) return of(null);
+        return this.planningService.getProgressUpdatesByProjectId(projectId).pipe(
+          catchError(() => of([])),
+          switchMap((updates) => {
+            if (updates.length > 0) {
+              const sorted = [...updates].sort((a, b) =>
+                new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime()
+              );
+              return of(sorted[0].freelancerId);
+            }
+            return this.projectApplicationService.getApplicationsByProject(projectId).pipe(
+              catchError(() => of([])),
+              switchMap((apps) => {
+                if (apps.length === 0) return of(null);
+                const accepted = apps.find((a) => a.status === 'ACCEPTED');
+                const app = accepted ?? apps[0];
+                return of(app.freelanceId);
+              })
+            );
+          })
+        );
+      })
+    ).subscribe((freelancerId: number | null) => {
+      if (this.editFormInitialPatch) return;
+      if (freelancerId != null) {
+        this.editForm.patchValue({ freelancerId }, { emitEvent: false });
+        this.cdr.detectChanges();
+      }
+    });
+    // When freelancer is selected in Edit form, auto-fill project from progress updates or project applications
+    this.editForm.get('freelancerId')?.valueChanges.pipe(
+      switchMap((freelancerId: number | null) => {
+        if (freelancerId == null) return of(null);
+        return this.planningService.getProgressUpdatesByFreelancerId(freelancerId).pipe(
+          catchError(() => of([])),
+          switchMap((updates) => {
+            if (updates.length > 0) {
+              const sorted = [...updates].sort((a, b) =>
+                new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime()
+              );
+              return of(sorted[0].projectId);
+            }
+            return this.projectApplicationService.getApplicationsByFreelance(freelancerId).pipe(
+              catchError(() => of([])),
+              switchMap((apps) => {
+                if (apps.length === 0) return of(null);
+                const accepted = apps.find((a) => a.status === 'ACCEPTED');
+                const app = accepted ?? apps[0];
+                return of(app.projectId);
+              })
+            );
+          })
+        );
+      })
+    ).subscribe((projectId: number | null) => {
+      if (this.editFormInitialPatch) return;
+      if (projectId != null) {
+        this.editForm.patchValue({ projectId }, { emitEvent: false });
         this.cdr.detectChanges();
       }
     });
@@ -473,6 +540,7 @@ export class PlanningManagement implements OnInit, OnDestroy {
     this.editingUpdate = update;
     this.updateToDelete = null;
     this.editProgressError = '';
+    this.editFormInitialPatch = true;
     this.editForm.patchValue({
       projectId: update.projectId,
       freelancerId: update.freelancerId,
@@ -480,6 +548,7 @@ export class PlanningManagement implements OnInit, OnDestroy {
       description: update.description ?? '',
       progressPercentage: update.progressPercentage,
     });
+    this.editFormInitialPatch = false; // valueChanges from patchValue already ran and were skipped
     this.planningService.getProgressUpdatesByProjectId(update.projectId).pipe(catchError(() => of([]))).subscribe((updates) => {
       const others = updates.filter((u) => u.id !== update.id);
       const max = others.length > 0 ? Math.max(...others.map((u) => u.progressPercentage)) : 0;

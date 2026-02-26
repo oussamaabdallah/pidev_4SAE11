@@ -101,7 +101,6 @@
     }
   }
 
-<<<<<<< HEAD
   .qa-section {
     margin-top: 2rem;
     padding: 1.5rem;
@@ -238,9 +237,7 @@
     font-style: italic;
   }
 
-=======
   // ── Apply Modal ────────────────────────────────────────────────────
->>>>>>> 3d77214c3395a206df006b98c337604ca8cfb723
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -255,15 +252,10 @@
   }
 
   .modal {
-<<<<<<< HEAD
-    max-width: 480px;
-    width: 100%;
-    border: 0;
-=======
     background: $white;
     border-radius: $radius-2xl;
     width: 100%;
-    max-width: 500px;
+    max-width: 480px;
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: $shadow-2xl;
@@ -370,7 +362,6 @@
       font-size: $font-size-sm;
       margin: $spacing-md $spacing-2xl 0;
     }
->>>>>>> 3d77214c3395a206df006b98c337604ca8cfb723
   }
 }
 
