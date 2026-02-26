@@ -78,6 +78,16 @@ public class OfferApplicationController {
     }
 
     /**
+     * READ - Candidatures acceptées du freelancer (Mes projets en cours)
+     * GET /api/applications/freelancer/{freelancerId}/accepted
+     */
+    @GetMapping("/freelancer/{freelancerId}/accepted")
+    public ResponseEntity<List<OfferApplicationResponse>> getAcceptedApplicationsByFreelancer(@PathVariable Long freelancerId) {
+        List<OfferApplicationResponse> response = applicationService.getAcceptedApplicationsByFreelancer(freelancerId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * READ - Récupérer les candidatures non lues d'un freelancer
      * GET /api/applications/unread/freelancer/{freelancerId}
      */

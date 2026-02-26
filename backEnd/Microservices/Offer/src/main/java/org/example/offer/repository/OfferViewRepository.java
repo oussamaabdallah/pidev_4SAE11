@@ -3,6 +3,7 @@ package org.example.offer.repository;
 import org.example.offer.entity.OfferView;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,4 +21,8 @@ public interface OfferViewRepository extends JpaRepository<OfferView, Long> {
 
     @Query("SELECT COUNT(v) FROM OfferView v WHERE v.clientId = :clientId AND v.offer.id = :offerId")
     long countByClientIdAndOfferId(@Param("clientId") Long clientId, @Param("offerId") Long offerId);
+
+    @Modifying
+    @Query("DELETE FROM OfferView v WHERE v.offer.id = :offerId")
+    void deleteByOfferId(@Param("offerId") Long offerId);
 }

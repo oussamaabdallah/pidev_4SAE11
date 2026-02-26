@@ -110,22 +110,69 @@
     <p class="loading-msg" *ngIf="loadingApps">Loading applications...</p>
     <p class="empty-msg" *ngIf="!loadingApps && applications.length === 0">No applications yet.</p>
     <div class="applications-list" *ngIf="!loadingApps && applications.length > 0">
-      <div class="app-card" *ngFor="let app of applications">
+      <div class="app-card" *ngFor="let app of applications" [class.app-card--unread]="app.isRead === false">
         <div class="app-main">
+          @if (app.isRead === false) {
+            <span class="app-badge-unread">New</span>
+          }
           <p class="app-message">{{ app.message }}</p>
           <p class="app-meta">Proposed budget: {{ app.proposedBudget | number:'1.2-2' }} - Applied {{ formatDate(app.appliedAt) }}</p>
-          <span class="app-status">{{ app.status }}</span>
+          @if (app.estimatedDuration) {
+            <p class="app-meta">Duration: {{ app.estimatedDuration }} day(s)</p>
+          }
+          @if (app.portfolioUrl) {
+            <p class="app-meta">Portfolio: <a [href]="app.portfolioUrl" target="_blank" rel="noopener">{{ app.portfolioUrl }}</a></p>
+          }
+          @if (app.status === 'REJECTED' && app.rejectionReason) {
+            <p class="app-rejection" role="alert"><strong>Reason:</strong> {{ app.rejectionReason }}</p>
+          }
+          <span class="app-status" [ngClass]="'app-status--' + app.status">{{ app.status }}</span>
         </div>
         <div class="app-actions" *ngIf="app.status === 'PENDING'">
           <button type="button" class="btn-accept" (click)="accept(app)" [disabled]="actioning">Accept</button>
+          <button type="button" class="btn-shortlist" (click)="shortlist(app)" [disabled]="actioning">Shortlist</button>
           <button type="button" class="btn-reject" (click)="reject(app)" [disabled]="actioning">Reject</button>
+          @if (app.isRead === false) {
+            <button type="button" class="btn-mark-read" (click)="markAsRead(app)">Mark read</button>
+          }
         </div>
-        <div class="app-actions" *ngIf="app.status === 'ACCEPTED'">
-          <button type="button" class="btn-create-project" (click)="createProject(app)">Create project</button>
+        <div class="app-actions" *ngIf="app.status === 'SHORTLISTED'">
+          <button type="button" class="btn-accept" (click)="accept(app)" [disabled]="actioning">Accept</button>
+          <button type="button" class="btn-reject" (click)="reject(app)" [disabled]="actioning">Reject</button>
+          @if (app.isRead === false) {
+            <button type="button" class="btn-mark-read" (click)="markAsRead(app)">Mark read</button>
+          }
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Modal Reject with reason -->
+@if (rejectModalOpen && rejectApp) {
+  <div class="modal-overlay" (click)="closeRejectModal()">
+    <div class="modal card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Reject application</h3>
+        <button type="button" class="modal-close" (click)="closeRejectModal()" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-text">Optionally add a reason to inform the client.</p>
+        <div class="form-group">
+          <label for="reject-reason">Reason (optional)</label>
+          <textarea id="reject-reason" [(ngModel)]="rejectReason" name="rejectReason" rows="3" placeholder="e.g. Budget does not match our scope..."></textarea>
+        </div>
+        @if (rejectError) {
+          <p class="modal-error" role="alert">{{ rejectError }}</p>
+        }
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" (click)="closeRejectModal()">Cancel</button>
+          <button type="button" class="btn-reject-confirm" (click)="submitReject()" [disabled]="actioning">{{ actioning ? 'Rejecting...' : 'Reject' }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
 <p class="error-msg" *ngIf="errorMessage">{{ errorMessage }}</p>
 <p class="loading-msg" *ngIf="loading && !offer">Loading offer...</p>

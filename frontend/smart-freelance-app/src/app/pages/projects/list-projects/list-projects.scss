@@ -35,6 +35,13 @@
   background-clip: text;
 }
 
+.page-hint {
+  margin: 0 0 $spacing-lg;
+  font-size: $font-size-sm;
+  color: $neutral-600;
+  line-height: $line-height-relaxed;
+}
+
 .btn--add-project {
   display: inline-flex;
   align-items: center;
@@ -250,6 +257,7 @@
 .btn--info   { background: $info-50;    color: $info-600;    &:hover { background: $info-500;    color: $white; } }
 .btn--update { background: $success-50; color: $success-700; &:hover { background: $success-500; color: $white; } }
 .btn--delete { background: $error-50;   color: $error-700;   &:hover { background: $error-500;   color: $white; } }
+.btn--apply  { @include button-gradient; color: $white; box-shadow: 0 2px 8px rgba($primary-500, 0.3); &:hover { box-shadow: $shadow-primary; } }
 
 // ── Empty State ─────────────────────────────────────────────────
 .empty-state {
@@ -259,8 +267,9 @@
   border-radius: $radius-xl;
   border: 2px dashed $neutral-300;
 
-  .empty-icon { font-size: 52px; display: block; margin-bottom: $spacing-md; }
-  p           { margin: 0 0 $spacing-lg; color: $neutral-500; font-size: $font-size-base; }
+  .empty-icon  { font-size: 52px; display: block; margin-bottom: $spacing-md; }
+  p            { margin: 0 0 $spacing-lg; color: $neutral-500; font-size: $font-size-base; }
+  .empty-hint  { margin: 0; color: $neutral-500; font-size: $font-size-sm; }
 }
 
 // ── Modal ─────────────────────────────────────────────────────────

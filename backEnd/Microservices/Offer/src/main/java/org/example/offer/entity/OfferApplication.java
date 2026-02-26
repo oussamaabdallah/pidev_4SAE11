@@ -52,6 +52,18 @@ public class OfferApplication {
     @Column(precision = 2, scale = 0)
     private Integer estimatedDuration; // Durée estimée en jours
 
+    /** Package sélectionné : BASIC, STANDARD, PREMIUM */
+    @Column(length = 20)
+    private String selectedPackage;
+
+    /** Extras sélectionnés - JSON array [{"name":"Révision","price":15}] */
+    @Column(columnDefinition = "TEXT")
+    private String selectedExtrasJson;
+
+    /** Montant total (package + extras) */
+    @Column(precision = 10, scale = 2)
+    private BigDecimal totalAmount;
+
     @NotNull(message = "Status is required")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -69,6 +81,9 @@ public class OfferApplication {
     private LocalDateTime respondedAt;
 
     private LocalDateTime acceptedAt;
+
+    /** ID du contrat créé lors de l'acceptation (microservice Contract). Pour "Mes projets en cours". */
+    private Long contractId;
 
     @PrePersist
     protected void onCreate() {

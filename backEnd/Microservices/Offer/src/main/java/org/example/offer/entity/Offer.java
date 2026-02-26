@@ -84,6 +84,24 @@ public class Offer {
     @Column(length = 500)
     private String tags;
 
+    /** Packages (Basic/Standard/Premium) - prix optionnels. Si null, utiliser price. */
+    @Column(precision = 10, scale = 2)
+    private BigDecimal basicPrice;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal standardPrice;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal premiumPrice;
+    @Column(length = 500)
+    private String basicDescription;
+    @Column(length = 500)
+    private String standardDescription;
+    @Column(length = 500)
+    private String premiumDescription;
+
+    /** Extras optionnels - JSON array [{"name":"Révision","price":15},{"name":"Urgent","price":25}] */
+    @Column(columnDefinition = "TEXT")
+    private String extrasJson;
+
     @Column(length = 255)
     private String imageUrl;
 
@@ -184,9 +202,9 @@ public class Offer {
         return LocalDate.now().isBefore(deadline) || LocalDate.now().isEqual(deadline);
     }
 
+    /** true si l'offre accepte des candidatures. La date limite (deadline) n'est pas bloquante : le freelancer peut encore accepter ou refuser. */
     public boolean canReceiveApplications() {
-        return this.isActive
-                && this.offerStatus == OfferStatus.AVAILABLE
-                && isValid();
+        return (this.isActive == null || Boolean.TRUE.equals(this.isActive))
+                && this.offerStatus == OfferStatus.AVAILABLE;
     }
 }

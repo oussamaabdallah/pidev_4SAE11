@@ -27,6 +27,13 @@ public class OfferResponse {
     private BigDecimal rating;
     private BigDecimal communicationScore;
     private String tags;
+    private BigDecimal basicPrice;
+    private BigDecimal standardPrice;
+    private BigDecimal premiumPrice;
+    private String basicDescription;
+    private String standardDescription;
+    private String premiumDescription;
+    private String extrasJson;
     private String imageUrl;
     private Integer viewsCount;
     private Boolean isFeatured;

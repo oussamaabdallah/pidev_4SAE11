@@ -7,6 +7,7 @@ import org.example.offer.client.ContractCreateRequest;
 import org.example.offer.dto.request.OfferApplicationRequest;
 import org.example.offer.dto.response.OfferApplicationResponse;
 import org.example.offer.entity.ApplicationStatus;
+import org.example.offer.entity.NotificationType;
 import org.example.offer.entity.Offer;
 import org.example.offer.entity.OfferApplication;
 import org.example.offer.entity.OfferStatus;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +40,7 @@ public class OfferApplicationService implements IOfferApplicationService {
     private final OfferRepository offerRepository;
     private final ModelMapper modelMapper;
     private final ContractClient contractClient;
+    private final NotificationService notificationService;
 
     /**
      * CREATE - Postuler à une offre
@@ -45,28 +48,55 @@ public class OfferApplicationService implements IOfferApplicationService {
     public OfferApplicationResponse applyToOffer(OfferApplicationRequest request) {
         log.info("Client {} applying to offer {}", request.getClientId(), request.getOfferId());
 
-        // Vérifier que l'offre existe
-        Offer offer = offerRepository.findById(request.getOfferId())
-                .orElseThrow(() -> new ResourceNotFoundException("Offer not found with id: " + request.getOfferId()));
+        try {
+            // Vérifier que l'offre existe
+            Offer offer = offerRepository.findById(request.getOfferId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Offer not found with id: " + request.getOfferId()));
 
-        // Validation métier
-        validateApplication(offer, request.getClientId());
+            // Validation métier
+            validateApplication(offer, request.getClientId());
 
-        // Créer la candidature (manual mapping to avoid ModelMapper confusing setId with getOfferId/getClientId)
-        OfferApplication application = new OfferApplication();
-        application.setOffer(offer);
-        application.setClientId(request.getClientId());
-        application.setMessage(request.getMessage());
-        application.setProposedBudget(request.getProposedBudget());
-        application.setPortfolioUrl(request.getPortfolioUrl());
-        application.setAttachmentUrl(request.getAttachmentUrl());
-        application.setEstimatedDuration(request.getEstimatedDuration());
-        application.setStatus(ApplicationStatus.PENDING);
+            // Créer la candidature (manual mapping to avoid ModelMapper confusing setId with getOfferId/getClientId)
+            OfferApplication application = new OfferApplication();
+            application.setOffer(offer);
+            application.setClientId(request.getClientId());
+            application.setMessage(request.getMessage());
+            application.setProposedBudget(request.getProposedBudget());
+            application.setPortfolioUrl(request.getPortfolioUrl());
+            application.setAttachmentUrl(request.getAttachmentUrl());
+            application.setEstimatedDuration(request.getEstimatedDuration());
+            application.setSelectedPackage(request.getSelectedPackage());
+            application.setSelectedExtrasJson(request.getSelectedExtrasJson());
+            application.setTotalAmount(request.getTotalAmount());
+            application.setStatus(ApplicationStatus.PENDING);
 
-        OfferApplication savedApplication = applicationRepository.save(application);
-        log.info("Application created successfully with ID: {}", savedApplication.getId());
+            OfferApplication savedApplication = applicationRepository.save(application);
+            log.info("Application created successfully with ID: {}", savedApplication.getId());
 
-        return mapToResponse(savedApplication);
+            // Notifier le freelancer : nouvelle candidature (PENDING)
+            try {
+                notificationService.createNotification(
+                        offer.getFreelancerId(),
+                        NotificationType.NEW_APPLICATION,
+                        "Nouvelle candidature",
+                        "Un client a postulé à votre offre : " + offer.getTitle(),
+                        offer.getId(),
+                        null
+                );
+            } catch (Exception e) {
+                log.warn("Could not create notification for new application (offer={}): {}", offer.getId(), e.getMessage());
+            }
+
+            return mapToResponse(savedApplication, offer);
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Data integrity on apply (offer={}, client={}): {}", request.getOfferId(), request.getClientId(), e.getMessage());
+            throw new BadRequestException("Impossible d'enregistrer la candidature (données invalides ou doublon).");
+        } catch (BadRequestException | ResourceNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error applying to offer {}: {}", request.getOfferId(), e.getMessage(), e);
+            throw new BadRequestException("Impossible d'enregistrer la candidature. Veuillez réessayer.");
+        }
     }
 
     /**
@@ -121,6 +151,17 @@ public class OfferApplicationService implements IOfferApplicationService {
     }
 
     /**
+     * READ - Candidatures acceptées du freelancer (Mes projets en cours)
+     */
+    public List<OfferApplicationResponse> getAcceptedApplicationsByFreelancer(Long freelancerId) {
+        log.info("Fetching accepted applications for freelancer: {}", freelancerId);
+        return applicationRepository.findAcceptedByFreelancerWithOffer(freelancerId)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * READ - Récupérer les candidatures non lues d'un freelancer
      */
     public List<OfferApplicationResponse> getUnreadApplicationsByFreelancer(Long freelancerId) {
@@ -166,9 +207,9 @@ public class OfferApplicationService implements IOfferApplicationService {
             throw new BadRequestException("You are not authorized to accept this application");
         }
 
-        // Validation : la candidature doit être en attente
-        if (application.getStatus() != ApplicationStatus.PENDING) {
-            throw new BadRequestException("Only pending applications can be accepted");
+        // Validation : la candidature doit être en attente (pas déjà acceptée, refusée ou retirée)
+        if (application.getStatus() != ApplicationStatus.PENDING && application.getStatus() != ApplicationStatus.SHORTLISTED) {
+            throw new BadRequestException("Seules les candidatures en attente peuvent être acceptées. Celle-ci a déjà le statut : " + application.getStatus());
         }
 
         // Accepter la candidature
@@ -195,10 +236,15 @@ public class OfferApplicationService implements IOfferApplicationService {
                 .endDate(offer.getDeadline())
                 .status("DRAFT")
                 .build();
-        contractClient.createContractFromAcceptedApplication(contractRequest);
-
-        log.info("Application accepted successfully: {}, contract created", id);
-        return mapToResponse(updatedApplication);
+        OfferApplicationResponse response = mapToResponse(updatedApplication, offer);
+        try {
+            contractClient.createContractFromAcceptedApplication(contractRequest);
+            log.info("Application accepted successfully: {}, contract created", id);
+        } catch (Exception e) {
+            log.warn("Application {} accepted but contract creation failed: {}", id, e.getMessage());
+            response.setWarningMessage("Candidature acceptée. La création du contrat a échoué (service contrat peut-être indisponible). Vous pourrez créer le contrat manuellement ou réessayer plus tard.");
+        }
+        return response;
     }
 
     /**
@@ -377,9 +423,12 @@ public class OfferApplicationService implements IOfferApplicationService {
     // ========== Méthodes privées de validation ==========
 
     private void validateApplication(Offer offer, Long clientId) {
-        // L'offre doit accepter des candidatures
+        // L'offre doit être en statut AVAILABLE (la date limite n'est pas bloquante)
         if (!offer.canReceiveApplications()) {
-            throw new BadRequestException("This offer is not accepting applications");
+            if (offer.getOfferStatus() != OfferStatus.AVAILABLE) {
+                throw new BadRequestException("Cette offre n'accepte pas de candidatures pour le moment.");
+            }
+            throw new BadRequestException("Cette offre n'accepte pas de candidatures.");
         }
 
         // Le client ne peut pas postuler à sa propre offre
@@ -394,9 +443,16 @@ public class OfferApplicationService implements IOfferApplicationService {
     }
 
     private OfferApplicationResponse mapToResponse(OfferApplication application) {
+        return mapToResponse(application, application.getOffer());
+    }
+
+    /** Utilise l'offre passée quand elle est déjà chargée (ex: applyToOffer) pour éviter LazyInitializationException. */
+    private OfferApplicationResponse mapToResponse(OfferApplication application, Offer offer) {
         OfferApplicationResponse response = modelMapper.map(application, OfferApplicationResponse.class);
-        response.setOfferId(application.getOffer().getId());
-        response.setOfferTitle(application.getOffer().getTitle());
+        if (offer != null) {
+            response.setOfferId(offer.getId());
+            response.setOfferTitle(offer.getTitle());
+        }
         response.setCanBeModified(application.canBeModified());
         return response;
     }

@@ -188,8 +188,9 @@ export class AuthService {
           this.scheduleTokenRefresh();
         }),
         catchError(() => {
-          console.warn('[AuthService] Token refresh failed — logging out');
-          this.logout();
+          // Ne pas déconnecter immédiatement : évite la redirection intempestive au clic (ex. View and Apply).
+          // On garde le token actuel ; si expiré, les appels API renverront 401 et l'utilisateur peut se reconnecter manuellement.
+          console.warn('[AuthService] Token refresh failed — keeping current token');
           return of({ error: 'Session expired. Please log in again.' });
         })
       );
@@ -267,6 +268,21 @@ export class AuthService {
   }
 
   // ── Token accessors ────────────────────────────────────────
+
+  /** Vérifie si un token est présent en localStorage (utile si le signal est désynchronisé). */
+  hasStoredToken(): boolean {
+    return !!localStorage.getItem(TOKEN_KEY);
+  }
+
+  /** Resynchronise le signal avec le token en localStorage (après navigation si le signal était vide). */
+  syncTokenFromStorage(): void {
+    const stored = localStorage.getItem(TOKEN_KEY);
+    if (stored) {
+      this.tokenSignal.set(stored);
+      const uid = localStorage.getItem(USER_ID_KEY);
+      this.userIdSignal.set(uid ? Number(uid) : null);
+    }
+  }
 
   getToken(): string | null {
     return this.tokenSignal();

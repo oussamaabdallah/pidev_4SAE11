@@ -1,14 +1,15 @@
 import { Component, Input, OnInit, signal, HostListener } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserService } from '../../../core/services/user.service';
+import { NotificationService, AppNotification } from '../../../core/services/notification.service';
 import { Button } from '../button/button';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, RouterLink, RouterLinkActive, Button],
+  imports: [CommonModule, DatePipe, RouterLink, RouterLinkActive, Button],
   templateUrl: './header.html',
   styleUrl: './header.scss',
   standalone: true,
@@ -16,22 +17,22 @@ import { Button } from '../button/button';
 export class Header implements OnInit {
   @Input() variant: 'public' | 'dashboard' | 'admin' = 'public';
 
-  // Public mobile nav
   mobileMenuOpen = signal(false);
-  // Dashboard mobile drawer
   dashboardMobileOpen = signal(false);
-  // User dropdown
   userMenuOpen = signal(false);
-  // Active nav dropdown key: 'work' | 'growth' | 'talent' | 'manage' | null
   activeDropdown = signal<string | null>(null);
-  // Scroll shadow
   isScrolled = signal(false);
-
   avatarUrl = signal<string | null>(null);
+
+  notifications = signal<AppNotification[]>([]);
+  unreadCount = signal(0);
+  notificationDropdownOpen = signal(false);
+  currentUserId = signal<number | null>(null);
 
   constructor(
     public auth: AuthService,
     private userService: UserService,
+    private notificationService: NotificationService,
     private router: Router
   ) {}
 
@@ -42,7 +43,50 @@ export class Header implements OnInit {
         this.userService.getByEmail(email).subscribe((user) => {
           const url = user?.avatarUrl?.trim() || null;
           setTimeout(() => this.avatarUrl.set(url), 0);
+          if (user?.id) {
+            this.currentUserId.set(user.id);
+            this.loadNotifications();
+            this.loadUnreadCount();
+          }
         });
+      }
+    }
+  }
+
+  loadNotifications(): void {
+    const id = this.currentUserId();
+    if (!id) return;
+    this.notificationService.getNotifications(id).subscribe((list) => this.notifications.set(list));
+  }
+
+  loadUnreadCount(): void {
+    const id = this.currentUserId();
+    if (!id) return;
+    this.notificationService.getUnreadCount(id).subscribe((c) => this.unreadCount.set(c));
+  }
+
+  toggleNotificationDropdown(): void {
+    this.notificationDropdownOpen.update((v) => !v);
+    if (!this.notificationDropdownOpen()) return;
+    this.loadNotifications();
+    this.loadUnreadCount();
+  }
+
+  closeNotificationDropdown(): void {
+    this.notificationDropdownOpen.set(false);
+  }
+
+  onNotificationClick(n: AppNotification): void {
+    const userId = this.currentUserId();
+    if (userId) this.notificationService.markAsRead(n.id, userId).subscribe();
+    this.notifications.update((list) => list.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+    this.unreadCount.update((c) => Math.max(0, c - 1));
+    this.notificationDropdownOpen.set(false);
+    if (n.offerId != null) {
+      if (this.auth.isFreelancer()) {
+        this.router.navigate(['/dashboard/my-offers', n.offerId, 'show']);
+      } else {
+        this.router.navigate(['/dashboard/browse-offers', n.offerId]);
       }
     }
   }
@@ -98,6 +142,9 @@ export class Header implements OnInit {
 
     if (!target.closest('.user-menu-container')) {
       this.userMenuOpen.set(false);
+    }
+    if (!target.closest('.notification-dropdown-container')) {
+      this.closeNotificationDropdown();
     }
     if (!target.closest('.nav-group')) {
       this.activeDropdown.set(null);

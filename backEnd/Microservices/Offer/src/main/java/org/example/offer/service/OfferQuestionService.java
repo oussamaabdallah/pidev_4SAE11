@@ -9,8 +9,10 @@ import org.example.offer.entity.Offer;
 import org.example.offer.entity.OfferQuestion;
 import org.example.offer.exception.BadRequestException;
 import org.example.offer.exception.ResourceNotFoundException;
+import org.example.offer.entity.NotificationType;
 import org.example.offer.repository.OfferQuestionRepository;
 import org.example.offer.repository.OfferRepository;
+import org.example.offer.service.NotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,7 @@ public class OfferQuestionService {
 
     private final OfferQuestionRepository questionRepository;
     private final OfferRepository offerRepository;
+    private final NotificationService notificationService;
 
     /**
      * Liste des questions-réponses pour une offre (ordre anti-chronologique).
@@ -54,6 +57,14 @@ public class OfferQuestionService {
         q.setQuestionText(request.getQuestionText().trim());
         q = questionRepository.save(q);
         log.info("Question added for offer {} by client {}", offerId, clientId);
+        // Notifier le freelancer (propriétaire de l'offre) lorsqu'il ouvre sa page
+        try {
+            String title = "New question on your offer";
+            String msg = "A client asked: \"" + (q.getQuestionText().length() > 80 ? q.getQuestionText().substring(0, 80) + "…" : q.getQuestionText()) + "\"";
+            notificationService.createNotification(offer.getFreelancerId(), NotificationType.NEW_QUESTION, title, msg, offerId, q.getId());
+        } catch (Exception e) {
+            log.warn("Could not create notification for new question (offer={}, questionId={}): {}", offerId, q.getId(), e.getMessage());
+        }
         return toResponse(q);
     }
 
@@ -71,6 +82,13 @@ public class OfferQuestionService {
         q.setAnsweredAt(LocalDateTime.now());
         q = questionRepository.save(q);
         log.info("Question {} answered by freelancer {}", questionId, freelancerId);
+        try {
+            String title = "Your question was answered";
+            String msg = "The freelancer replied to your question on offer \"" + (q.getOffer().getTitle().length() > 50 ? q.getOffer().getTitle().substring(0, 50) + "…" : q.getOffer().getTitle()) + "\"";
+            notificationService.createNotification(q.getClientId(), NotificationType.QUESTION_ANSWERED, title, msg, q.getOffer().getId(), questionId);
+        } catch (Exception e) {
+            log.warn("Could not create notification for answered question (questionId={}): {}", questionId, e.getMessage());
+        }
         return toResponse(q);
     }
 

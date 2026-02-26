@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { SKIP_UNAUTHORIZED_LOGOUT_HEADER } from '../interceptors/unauthorized-interceptor';
 
 // ── Domain types ────────────────────────────────────────────────────────────
 export type ContractStatus =
@@ -58,12 +59,18 @@ export class ContractService {
     return this.http.get<Contract[]>(`${this.base}/contracts`);
   }
 
+  /** Ne déclenche pas de logout en cas de 401 (appel optionnel sur My Applications). */
   getByClient(clientId: number): Observable<Contract[]> {
-    return this.http.get<Contract[]>(`${this.base}/contracts/client/${clientId}`);
+    return this.http.get<Contract[]>(`${this.base}/contracts/client/${clientId}`, {
+      headers: { [SKIP_UNAUTHORIZED_LOGOUT_HEADER]: 'true' },
+    });
   }
 
+  /** Ne déclenche pas de logout en cas de 401 (appel optionnel sur My Contracts, etc.). */
   getByFreelancer(freelancerId: number): Observable<Contract[]> {
-    return this.http.get<Contract[]>(`${this.base}/contracts/freelancer/${freelancerId}`);
+    return this.http.get<Contract[]>(`${this.base}/contracts/freelancer/${freelancerId}`, {
+      headers: { [SKIP_UNAUTHORIZED_LOGOUT_HEADER]: 'true' },
+    });
   }
 
   getById(id: number): Observable<Contract> {

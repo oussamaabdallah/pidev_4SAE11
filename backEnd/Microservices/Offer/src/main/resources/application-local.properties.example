@@ -1,11 +1,11 @@
 # Configuration locale (ne pas committer ce fichier avec votre clé réelle)
 # 1. Copiez ce fichier vers : application-local.properties
-# 2. Remplacez YOUR_GOOGLE_TRANSLATE_API_KEY par votre clé API Google Cloud Translation
+# 2. Remplacez YOUR_LIBRETRANSLATE_API_KEY par votre clé API LibreTranslate (managed hosting)
 # 3. Lancez le microservice Offer avec le profil "local" :
 #    java -jar ... --spring.profiles.active=local
 #    ou dans votre IDE : Active profiles = local
 
-# Clé API Google Cloud Translation (traduction FR / EN / AR)
-# Obtenir une clé : https://console.cloud.google.com/apis/credentials
-# Activer l'API : Cloud Translation API
-app.translation.google-api-key=YOUR_GOOGLE_TRANSLATE_API_KEY
+# LibreTranslate - Managed Hosting (https://libretranslate.com)
+# Obtenir une clé : https://libretranslate.com (ou instance self-hosted sans clé)
+app.translation.libretranslate-url=https://libretranslate.com/translate
+app.translation.libretranslate-api-key=YOUR_LIBRETRANSLATE_API_KEY

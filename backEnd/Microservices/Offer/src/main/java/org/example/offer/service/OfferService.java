@@ -18,7 +18,9 @@ import org.example.offer.entity.OfferStatus;
 import org.example.offer.exception.BadRequestException;
 import org.example.offer.exception.ResourceNotFoundException;
 import org.example.offer.repository.OfferApplicationRepository;
+import org.example.offer.repository.OfferQuestionRepository;
 import org.example.offer.repository.OfferRepository;
+import org.example.offer.repository.OfferViewRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,6 +48,8 @@ public class OfferService implements IOfferService {
 
     private final OfferRepository offerRepository;
     private final OfferApplicationRepository applicationRepository;
+    private final OfferViewRepository offerViewRepository;
+    private final OfferQuestionRepository offerQuestionRepository;
     private final ModelMapper modelMapper;
     private final TranslationService translationService;
 
@@ -359,9 +363,14 @@ public class OfferService implements IOfferService {
 
         if (offer.getOfferStatus() == OfferStatus.ACCEPTED ||
                 offer.getOfferStatus() == OfferStatus.IN_PROGRESS) {
-            throw new BadRequestException("Cannot delete an accepted or in-progress offer");
+            throw new BadRequestException(
+                "Cannot delete an accepted or in-progress offer. Close or cancel it first.");
         }
 
+        // Supprimer d'abord les enfants (FK) : vues, questions, puis applications (cascade) et offre
+        offerViewRepository.deleteByOfferId(id);
+        offerQuestionRepository.deleteByOfferId(id);
+        applicationRepository.deleteByOfferId(id);
         offerRepository.delete(offer);
         log.info("Offer deleted successfully: {}", id);
     }

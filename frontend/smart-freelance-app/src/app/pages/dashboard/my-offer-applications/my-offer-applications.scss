@@ -1,7 +1,7 @@
 @import '../../../../styles/variables';
 
 .my-applications-page {
-  max-width: 900px;
+  max-width: 1200px;
   padding: $spacing-3xl $spacing-lg;
   margin: 0 auto;
   font-family: $font-family;
@@ -25,6 +25,146 @@
     color: $neutral-500;
     margin-bottom: $spacing-xl;
     font-size: $font-size-sm;
+  }
+
+  .section-applications-title {
+    margin: $spacing-2xl 0 $spacing-md;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $neutral-800;
+  }
+
+  // ── Recommended for you (postuler) ─────────────────────────────
+  .recommended-section {
+    margin-bottom: $spacing-2xl;
+    padding: $spacing-xl;
+    background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 1px solid #bbf7d0;
+    border-radius: $radius-xl;
+  }
+
+  .recommended-section__title {
+    margin: 0 0 $spacing-xs;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: #166534;
+  }
+
+  .recommended-section__subtitle {
+    margin: 0 0 $spacing-md;
+    font-size: $font-size-sm;
+    color: #15803d;
+  }
+
+  .recommended-section__loading {
+    margin: 0;
+    font-size: $font-size-sm;
+    color: $neutral-500;
+  }
+
+  .recommended-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: $spacing-lg;
+  }
+
+  .offer-card {
+    background: $white;
+    border-radius: $radius-xl;
+    border: 1.5px solid $neutral-200;
+    padding: $spacing-lg;
+    transition: $transition-base;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+
+    &:hover {
+      border-color: $primary-500;
+      box-shadow: 0 6px 24px rgba($primary-500, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .offer-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .offer-title {
+      margin: 0 0 $spacing-sm;
+      font-size: $font-size-lg;
+      font-weight: $font-weight-bold;
+      color: $neutral-900;
+      line-height: $line-height-snug;
+    }
+
+    .offer-domain {
+      display: inline-block;
+      background: $gradient-soft;
+      color: $primary-500;
+      padding: 2px $spacing-sm;
+      border-radius: $radius-full;
+      font-size: 11px;
+      font-weight: $font-weight-bold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: $spacing-sm;
+    }
+
+    .offer-desc {
+      font-size: $font-size-sm;
+      color: $neutral-600;
+      line-height: $line-height-relaxed;
+      margin-bottom: $spacing-md;
+      flex: 1;
+    }
+
+    .offer-meta .price {
+      font-size: $font-size-sm;
+      font-weight: $font-weight-semibold;
+      color: $neutral-800;
+    }
+
+    .offer-badge {
+      position: absolute;
+      top: $spacing-sm;
+      right: $spacing-sm;
+      font-size: 10px;
+      font-weight: $font-weight-bold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #166534;
+      background: #dcfce7;
+      padding: 2px $spacing-sm;
+      border-radius: 6px;
+    }
+
+    .btn-view {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: $spacing-md;
+      padding: $spacing-sm $spacing-lg;
+      @include button-gradient;
+      border-radius: $radius-full;
+      text-decoration: none;
+      font-weight: $font-weight-semibold;
+      font-size: $font-size-sm;
+      color: $white;
+      transition: $transition-base;
+      &:hover { transform: translateY(-1px); box-shadow: $shadow-primary; }
+    }
+  }
+
+  .offer-card--recommended {
+    border-color: #86efac;
+  }
+
+  .empty-state a {
+    color: $primary-600;
+    font-weight: $font-weight-semibold;
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
   }
 
   // ── Toolbar ────────────────────────────────────────────────────
@@ -133,13 +273,43 @@
       color: $neutral-600;
     }
 
+    .app-accepted-msg {
+      margin: 0 0 $spacing-xs;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-semibold;
+      color: $success-700;
+    }
+
+    .app-contract-pending {
+      font-size: $font-size-sm;
+      color: $neutral-500;
+      font-style: italic;
+    }
+
+    .app-rejection {
+      margin: $spacing-sm 0 0;
+      padding: $spacing-sm;
+      background: $error-50;
+      color: $error-700;
+      border-radius: $radius-md;
+      font-size: $font-size-sm;
+    }
+
     .status-PENDING     { background: $info-100;   color: $info-600; }
     .status-ACCEPTED    { background: $success-50; color: $success-700; }
     .status-REJECTED    { background: $error-50;   color: $error-700; }
     .status-WITHDRAWN,
     .status-SHORTLISTED { background: $neutral-100; color: $neutral-600; }
 
-    .btn-view {
+    .app-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: $spacing-sm;
+      flex-shrink: 0;
+    }
+
+    .btn-access {
       display: inline-flex;
       align-items: center;
       padding: $spacing-xs $spacing-md;
@@ -149,11 +319,187 @@
       font-size: $font-size-sm;
       font-weight: $font-weight-semibold;
       box-shadow: 0 2px 8px rgba($primary-500, 0.3);
+      transition: $transition-base;
+      &:hover { transform: translateY(-1px); box-shadow: $shadow-primary; }
+    }
+
+    .btn-edit {
+      padding: $spacing-xs $spacing-md;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: $primary-600;
+      background: transparent;
+      border: 1.5px solid $primary-100;
+      border-radius: $radius-full;
+      cursor: pointer;
+      transition: $transition-base;
+      &:hover:not(:disabled) { background: $primary-100; }
+      &:disabled { opacity: 0.6; cursor: not-allowed; }
+    }
+
+    .btn-withdraw {
+      padding: $spacing-xs $spacing-md;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: $neutral-600;
+      background: transparent;
+      border: 1.5px solid $neutral-300;
+      border-radius: $radius-full;
+      cursor: pointer;
+      transition: $transition-base;
+      &:hover:not(:disabled) { background: $neutral-100; }
+      &:disabled { opacity: 0.6; cursor: not-allowed; }
+    }
+
+    .btn-delete {
+      padding: $spacing-xs $spacing-md;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: $error-600;
+      background: transparent;
+      border: 1.5px solid $error-200;
+      border-radius: $radius-full;
+      cursor: pointer;
+      transition: $transition-base;
+      &:hover:not(:disabled) { background: $error-50; }
+      &:disabled { opacity: 0.6; cursor: not-allowed; }
+    }
+
+    .btn-view {
+      display: inline-flex;
+      align-items: center;
+      padding: $spacing-xs $spacing-md;
+      border: 1.5px solid $neutral-300;
+      border-radius: $radius-full;
+      text-decoration: none;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: $neutral-700;
+      background: $white;
       flex-shrink: 0;
       transition: $transition-base;
 
-      &:hover { transform: translateY(-1px); box-shadow: $shadow-primary; }
+      &:hover { background: $neutral-50; border-color: $neutral-400; }
     }
+  }
+}
+
+// ── Modal Edit ─────────────────────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: $spacing-lg;
+}
+
+.modal {
+  background: $white;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-lg;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-lg $spacing-xl;
+    border-bottom: 1px solid $neutral-200;
+  }
+
+  .modal-title {
+    margin: 0;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $neutral-900;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: $neutral-500;
+    cursor: pointer;
+    padding: 0 $spacing-xs;
+    line-height: 1;
+    &:hover { color: $neutral-700; }
+  }
+
+  .modal-body {
+    padding: $spacing-xl;
+  }
+
+  .form-group {
+    margin-bottom: $spacing-md;
+
+    label {
+      display: block;
+      margin-bottom: $spacing-xs;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: $neutral-700;
+    }
+
+    .required { color: $error-600; }
+
+    input, textarea {
+      width: 100%;
+      padding: $spacing-sm $spacing-md;
+      border: 1.5px solid $neutral-300;
+      border-radius: $radius-md;
+      font-size: $font-size-base;
+      &:focus {
+        outline: none;
+        border-color: $primary-500;
+        box-shadow: 0 0 0 3px rgba($primary-500, 0.15);
+      }
+    }
+  }
+
+  .modal-error {
+    margin: 0 0 $spacing-md;
+    padding: $spacing-sm;
+    background: $error-50;
+    color: $error-700;
+    border-radius: $radius-md;
+    font-size: $font-size-sm;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: $spacing-md;
+    justify-content: flex-end;
+    margin-top: $spacing-lg;
+  }
+
+  .btn-cancel {
+    padding: $spacing-sm $spacing-lg;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $neutral-600;
+    background: $neutral-100;
+    border: none;
+    border-radius: $radius-full;
+    cursor: pointer;
+    &:hover { background: $neutral-200; }
+  }
+
+  .btn-submit {
+    padding: $spacing-sm $spacing-lg;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $white;
+    @include button-gradient;
+    border: none;
+    border-radius: $radius-full;
+    cursor: pointer;
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
   }
 }
 
@@ -166,6 +512,11 @@
     flex-direction: column;
     align-items: stretch;
 
+    .app-actions {
+      width: 100%;
+      flex-direction: column;
+    }
+    .btn-access,
     .btn-view { width: 100%; justify-content: center; }
   }
 }

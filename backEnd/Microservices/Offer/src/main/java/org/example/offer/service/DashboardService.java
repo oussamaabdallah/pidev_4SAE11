@@ -63,13 +63,9 @@ public class DashboardService implements IDashboardService {
                 .size();
         stats.setTotalProjectsPosted(totalProjects);
 
-        // Pending Applications
-        long pendingApps = applicationRepository
-                .findByStatus(ApplicationStatus.PENDING)
-                .stream()
-                .filter(app -> app.getOffer().getFreelancerId().equals(freelancerId))
-                .count();
-        stats.setPendingApplications((int) pendingApps);
+        // Pending Applications (requête directe pour éviter LazyInitializationException)
+        Long pendingApps = applicationRepository.countByOfferFreelancerIdAndStatus(freelancerId, ApplicationStatus.PENDING);
+        stats.setPendingApplications(pendingApps != null ? pendingApps.intValue() : 0);
 
         // Active Offers
         Integer activeOffers = offerRepository
@@ -87,10 +83,8 @@ public class DashboardService implements IDashboardService {
 
     @Override
     public Long getPendingApplicationsCountByFreelancer(Long freelancerId) {
-        return applicationRepository.findByStatus(ApplicationStatus.PENDING)
-                .stream()
-                .filter(app -> app.getOffer().getFreelancerId().equals(freelancerId))
-                .count();
+        Long count = applicationRepository.countByOfferFreelancerIdAndStatus(freelancerId, ApplicationStatus.PENDING);
+        return count != null ? count : 0L;
     }
 
     @Override
@@ -134,8 +128,7 @@ public class DashboardService implements IDashboardService {
     @Override
     public Map<LocalDate, Long> getApplicationTrendByFreelancer(Long freelancerId, int lastDays) {
         LocalDateTime from = LocalDateTime.now().minusDays(lastDays);
-        return applicationRepository.findRecentApplications(from).stream()
-                .filter(a -> a.getOffer().getFreelancerId().equals(freelancerId))
+        return applicationRepository.findRecentApplicationsByFreelancer(from, freelancerId).stream()
                 .collect(Collectors.groupingBy(a -> a.getAppliedAt().toLocalDate(), Collectors.counting()));
     }
 

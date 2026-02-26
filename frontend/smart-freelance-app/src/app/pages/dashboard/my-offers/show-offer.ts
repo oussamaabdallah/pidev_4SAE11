@@ -1,10 +1,11 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserService, User } from '../../../core/services/user.service';
 import { OfferService, Offer, OfferApplication, OfferQuestionResponse } from '../../../core/services/offer.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-show-offer',
@@ -32,12 +33,18 @@ export class ShowOffer implements OnInit {
   answerTexts: Record<number, string> = {};
   answeringId: number | null = null;
 
+  /** Modal rejet avec raison */
+  rejectModalOpen = false;
+  rejectApp: OfferApplication | null = null;
+  rejectReason = '';
+  rejectError: string | null = null;
+
   constructor(
     private route: ActivatedRoute,
-    private router: Router,
     private auth: AuthService,
     private userService: UserService,
     private offerService: OfferService,
+    private toast: ToastService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -93,27 +100,74 @@ export class ShowOffer implements OnInit {
   accept(app: OfferApplication): void {
     if (!this.currentUser?.id) return;
     this.actioning = true;
-    this.offerService.acceptApplication(app.id, this.currentUser.id).subscribe(() => {
-      this.actioning = false;
-      this.loadApplications();
-      this.cdr.detectChanges();
+    this.offerService.acceptApplication(app.id, this.currentUser.id).subscribe({
+      next: (res) => {
+        this.actioning = false;
+        this.loadApplications();
+        if (res?.warningMessage) this.toast.warning(res.warningMessage);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.actioning = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  /** Rejet avec raison optionnelle (ouvre le modal). */
+  openRejectModal(app: OfferApplication): void {
+    this.rejectApp = app;
+    this.rejectReason = '';
+    this.rejectModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeRejectModal(): void {
+    this.rejectModalOpen = false;
+    this.rejectApp = null;
+    this.rejectReason = '';
+    this.rejectError = null;
+    this.cdr.detectChanges();
+  }
+
+  submitReject(): void {
+    if (!this.rejectApp || !this.currentUser?.id) return;
+    this.actioning = true;
+    this.rejectError = null;
+    this.offerService.rejectApplication(this.rejectApp.id, this.currentUser.id, this.rejectReason?.trim() || undefined).subscribe({
+      next: () => {
+        this.actioning = false;
+        this.closeRejectModal();
+        this.loadApplications();
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.actioning = false;
+        this.rejectError = 'Failed to reject application.';
+        this.cdr.detectChanges();
+      },
     });
   }
 
   reject(app: OfferApplication): void {
+    this.openRejectModal(app);
+  }
+
+  shortlist(app: OfferApplication): void {
     if (!this.currentUser?.id) return;
     this.actioning = true;
-    this.offerService.rejectApplication(app.id, this.currentUser.id).subscribe(() => {
+    this.offerService.shortlistApplication(app.id, this.currentUser.id).subscribe(() => {
       this.actioning = false;
       this.loadApplications();
       this.cdr.detectChanges();
     });
   }
 
-  createProject(app: OfferApplication): void {
-    if (!this.offer) return;
-    this.router.navigate(['/dashboard/my-projects/add'], {
-      state: { fromOffer: true, offer: this.offer, application: app },
+  markAsRead(app: OfferApplication): void {
+    if (!this.currentUser?.id) return;
+    this.offerService.markApplicationAsRead(app.id, this.currentUser.id).subscribe(() => {
+      this.loadApplications();
+      this.cdr.detectChanges();
     });
   }
 
@@ -130,7 +184,7 @@ export class ShowOffer implements OnInit {
       },
       error: (err: unknown) => {
         const e = err as { error?: { message?: string }; message?: string };
-        this.translateError = e?.error?.message || e?.message || 'Translation failed. Check API key configuration.';
+        this.translateError = e?.error?.message || e?.message || 'Translation failed.';
         this.translating = false;
         this.cdr.detectChanges();
       },

@@ -32,4 +32,13 @@ public class OfferApplicationRequest {
 
     @Min(value = 1, message = "Estimated duration must be at least 1 day")
     private Integer estimatedDuration;
+
+    /** Package sélectionné : BASIC, STANDARD, PREMIUM */
+    private String selectedPackage;
+
+    /** Extras sélectionnés - JSON string [{"name":"Révision","price":15}] */
+    private String selectedExtrasJson;
+
+    /** Montant total (package + extras) */
+    private BigDecimal totalAmount;
 }

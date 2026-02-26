@@ -8,6 +8,11 @@ export const authGuard: CanActivateFn = () => {
   if (auth.isLoggedIn()) {
     return true;
   }
+  // Si le token est en localStorage mais pas dans le signal (race / désync), resynchroniser et autoriser
+  if (auth.hasStoredToken()) {
+    auth.syncTokenFromStorage();
+    return true;
+  }
   router.navigate(['/login']);
   return false;
 };

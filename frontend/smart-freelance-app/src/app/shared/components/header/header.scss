@@ -330,7 +330,33 @@
   &:focus-visible { @include focus-ring; }
 }
 
-// Notification dot badge
+// Notification dropdown container
+.notification-dropdown-container {
+  position: relative;
+}
+
+.notif-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: $error-500;
+  color: #fff;
+  font-size: 11px;
+  font-weight: $font-weight-semibold;
+  border-radius: $radius-full;
+  line-height: 1;
+}
+
+.notif-btn:has(.notif-badge)::after {
+  display: none;
+}
+
 .notif-btn::after {
   content: '';
   position: absolute;
@@ -341,6 +367,79 @@
   background: $primary-600;
   border: 2px solid #ffffff;
   border-radius: $radius-full;
+}
+
+.notification-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 320px;
+  max-width: 400px;
+  max-height: 400px;
+  overflow: auto;
+  background: #fff;
+  border-radius: $radius-lg;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border: 1px solid $neutral-200;
+  z-index: $z-dropdown;
+}
+
+.notification-dropdown-header {
+  padding: 12px 16px;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $neutral-800;
+  border-bottom: 1px solid $neutral-100;
+}
+
+.notification-empty {
+  padding: 24px 16px;
+  margin: 0;
+  font-size: $font-size-sm;
+  color: $neutral-500;
+  text-align: center;
+}
+
+.notification-item {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid $neutral-100;
+  background: transparent;
+  font-family: $font-family;
+  cursor: pointer;
+  transition: background $transition-fast;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: $neutral-50; }
+
+  &.unread {
+    background: rgba($primary-500, 0.06);
+  }
+}
+
+.notification-item__title {
+  display: block;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-900;
+  margin-bottom: 2px;
+}
+
+.notification-item__message {
+  display: block;
+  font-size: 12px;
+  color: $neutral-600;
+  margin-bottom: 4px;
+  line-height: 1.35;
+}
+
+.notification-item__date {
+  display: block;
+  font-size: 11px;
+  color: $neutral-400;
 }
 
 // ── Primary CTA button ──

@@ -16,7 +16,7 @@ import {
   MonthlyEvolution,
 } from '../../../core/services/offer.service';
 
-const DEBOUNCE_MS = 350;
+const DEBOUNCE_MS = 150; // court pour que la 1ère lettre déclenche la recherche rapidement
 const PAGE_SIZE = 10;
 
 @Component({
@@ -49,6 +49,9 @@ export class ListOffers implements OnInit, OnDestroy {
   maxPrice: number | null = null;
   private keyword$ = new Subject<string>();
   private destroy$ = new Subject<void>();
+  /** Évite une 2e requête quand la 1ère lettre a déjà déclenché une recherche immédiate */
+  private lastImmediateKeyword = '';
+  private lastImmediateAt = 0;
 
   // Statistiques (calcul backend, affichage uniquement)
   statsByStatus: Record<string, number> | null = null;
@@ -94,14 +97,35 @@ export class ListOffers implements OnInit, OnDestroy {
   private setupSearchDebounce(): void {
     this.keyword$
       .pipe(debounceTime(DEBOUNCE_MS), distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe(() => {
+      .subscribe((value) => {
+        const trimmed = (value || '').trim();
+        // Ne pas relancer si on vient de faire une recherche immédiate pour 1 caractère
+        if (trimmed.length === 1 && this.lastImmediateKeyword === trimmed && Date.now() - this.lastImmediateAt < 500) {
+          return;
+        }
         this.currentPage = 0;
         this.loadOffers();
       });
   }
 
   onKeywordInput(): void {
+    const trimmed = this.keyword.trim();
+    // Dès la 1ère lettre : recherche immédiate (sans attendre le debounce)
+    if (trimmed.length === 1) {
+      this.lastImmediateKeyword = trimmed;
+      this.lastImmediateAt = Date.now();
+      this.currentPage = 0;
+      this.loadOffers();
+    }
     this.keyword$.next(this.keyword);
+  }
+
+  /** Au clic/focus sur le champ recherche : relancer la recherche si un mot-clé est déjà saisi */
+  onSearchFocus(): void {
+    if (this.keyword?.trim()) {
+      this.currentPage = 0;
+      this.loadOffers();
+    }
   }
 
   buildFilter(): OfferFilterRequest {
@@ -201,6 +225,11 @@ export class ListOffers implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  /** Backend does not allow delete for ACCEPTED or IN_PROGRESS. */
+  canDeleteOffer(offer: Offer): boolean {
+    return offer.offerStatus !== 'ACCEPTED' && offer.offerStatus !== 'IN_PROGRESS';
   }
 
   openDeleteModal(offer: Offer): void {

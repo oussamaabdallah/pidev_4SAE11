@@ -2,22 +2,37 @@
   <div class="back-row">
     <a routerLink="/dashboard/browse-offers" class="btn btn-link text-secondary text-decoration-none p-0">← Back to offers</a>
   </div>
-  <div class="card shadow-sm mb-4">
-    <div class="card-body">
-      <h1 class="h3 mb-1">{{ offer.title }}</h1>
-      <p class="text-muted small mb-2">{{ offer.domain }}</p>
-      <p class="card-text mb-3">{{ offer.description }}</p>
-      <div class="d-flex flex-wrap gap-3 align-items-center mb-3">
-        <span class="fw-semibold">{{ offer.price | number:'1.2-2' }} ({{ offer.durationType }})</span>
-        <span *ngIf="offer.deadline" class="text-muted small">Deadline: {{ offer.deadline }}</span>
-      </div>
-      <button type="button" class="btn btn-success" (click)="openApplyModal()" *ngIf="offer.canReceiveApplications">Apply for this offer</button>
-      <p *ngIf="!offer.canReceiveApplications" class="text-muted small mb-0">This offer is not accepting applications.</p>
-    </div>
-  </div>
 
-  <!-- Q&A -->
-  <section class="card shadow-sm">
+  <div class="offer-layout">
+    <!-- Main content -->
+    <div class="offer-main">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h1 class="h3 mb-1">{{ offer.title }}</h1>
+          <p class="text-muted small mb-2">{{ offer.domain }}</p>
+          <p class="card-text mb-3">{{ offer.description }}</p>
+          <div class="d-flex flex-wrap gap-3 align-items-center mb-3">
+            <span class="fw-semibold">{{ offer.price | number:'1.2-2' }} ({{ offer.durationType }})</span>
+            <span *ngIf="offer.deadline" class="text-muted small">Deadline: {{ offer.deadline }}</span>
+          </div>
+          <!-- Bouton Postuler visible pour le client (toujours cliquable ; le backend refusera si l'offre n'accepte plus) -->
+          @if (currentUser && currentUser.id !== offer.freelancerId) {
+            <div class="apply-cta">
+              <button type="button" class="btn-postuler" (click)="openApplyModal()">
+                Postuler à cette offre
+              </button>
+              <p class="apply-cta__hint" *ngIf="offer.canReceiveApplications === false">Cette offre peut ne plus accepter de candidatures ; vous pouvez tout de même envoyer une demande.</p>
+            </div>
+          } @else if (!currentUser) {
+            <div class="apply-cta">
+              <a routerLink="/login" class="btn-postuler">Log in to apply</a>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Q&A -->
+      <section class="card shadow-sm" id="qa-section">
     <div class="card-body">
       <h2 class="h5 mb-1">Questions & Answers</h2>
       <p class="text-muted small mb-3">Ask the freelancer anything before applying.</p>
@@ -76,41 +91,192 @@
       </div>
     </div>
   </section>
+    </div>
 
-  <!-- Modal Apply -->
+    <!-- Sidebar: How can I help? (Fiverr-like) -->
+    <aside class="offer-sidebar" *ngIf="currentUser?.id !== offer.freelancerId">
+      @if (currentUser) {
+        <div class="help-card card shadow-sm">
+          <div class="card-body">
+            <h2 class="help-card__title">How can I help?</h2>
+            <button type="button" class="help-option" (click)="openApplyModal()">
+              <span class="help-option__icon">📄</span>
+              <span class="help-option__text">Get a quote</span>
+              <span class="help-option__arrow">→</span>
+            </button>
+            <button type="button" class="help-option" (click)="scrollToQa()">
+              <span class="help-option__icon">💬</span>
+              <span class="help-option__text">Ask a question</span>
+              <span class="help-option__arrow">→</span>
+            </button>
+            <button type="button" class="help-option" (click)="openApplyModal()">
+              <span class="help-option__icon">📹</span>
+              <span class="help-option__text">Request to order</span>
+              <span class="help-option__sub">Share details and get a custom offer.</span>
+              <span class="help-option__arrow">→</span>
+            </button>
+            <button type="button" class="btn-contact" (click)="openApplyModal()">
+              Contact me
+            </button>
+          </div>
+        </div>
+      } @else {
+        <div class="help-card card shadow-sm">
+          <div class="card-body">
+            <h2 class="help-card__title">How can I help?</h2>
+            <p class="text-muted small mb-3">Log in to contact the freelancer, get a quote, or request a custom offer.</p>
+            <a routerLink="/login" class="btn btn-apply w-100">Log in</a>
+          </div>
+        </div>
+      }
+    </aside>
+  </div>
+
+  <!-- Modal: Postuler (design order-card Bootstrap-like) -->
   <div class="modal-overlay" *ngIf="applyModalOpen" (click)="closeApplyModal()">
-    <div class="modal card shadow" (click)="$event.stopPropagation()">
-      <div class="card-body">
-        <h3 class="h5 card-title mb-3">Apply for {{ offer.title }}</h3>
-        <form [formGroup]="form" (ngSubmit)="submitApplication()">
-          <div class="mb-3">
-            <label for="message" class="form-label">Message <span class="text-danger">*</span></label>
-            <textarea id="message" class="form-control" formControlName="message" rows="4" placeholder="Introduce yourself and why you want this service (min 20 characters)." [class.is-invalid]="form.get('message')?.invalid && form.get('message')?.touched"></textarea>
+    <div class="modal order-card" (click)="$event.stopPropagation()">
+      <div class="order-header">
+        <h3 class="order-header__title"><i class="bi bi-cart-check"></i> Postuler à cette offre</h3>
+        <p class="order-header__subtitle">Complétez le formulaire ci-dessous pour commander ce service</p>
+        <button type="button" class="modal-close modal-close--light" (click)="closeApplyModal()" aria-label="Fermer">×</button>
+      </div>
+      <div class="order-body">
+        <div class="info-banner">
+          <i class="bi bi-info-circle-fill"></i>
+          <p>
+            Le freelancer vous répondra sous <strong>1 à 2 jours</strong>.
+            @if (hasPackages || hasExtras) {
+              Choisissez un package, ajoutez des options si besoin, puis décrivez votre projet.
+            } @else {
+              Décrivez votre projet et indiquez votre budget ci-dessous.
+            }
+            Le freelancer sera notifié et pourra accepter ou refuser.
+          </p>
+        </div>
+        @if (freelancer) {
+          <div class="seller-block">
+            <img [src]="getFreelancerAvatar()" [alt]="freelancer.firstName" class="seller-avatar" (error)="onSellerAvatarError($event)" />
+            <div class="seller-info">
+              <span class="seller-from">De {{ freelancer.firstName }} {{ freelancer.lastName }}</span>
+              <span class="seller-meta">Réponse sous 1 à 2 jours</span>
+            </div>
+          </div>
+        }
+        <div class="progress-steps">
+          <div class="step" [class.active]="hasPackages" [class.completed]="hasPackages && selectedPackage"><div class="step-circle">1</div><div class="step-label">Package</div></div>
+          <div class="step" [class.active]="hasExtras || !hasPackages"><div class="step-circle">2</div><div class="step-label">Détails</div></div>
+          <div class="step"><div class="step-circle">3</div><div class="step-label">Confirmation</div></div>
+        </div>
+
+        @if (hasPackages && offer) {
+          <div class="order-section">
+            <h4 class="section-title"><i class="bi bi-box-seam"></i> Choisissez votre package</h4>
+            <div class="package-selector">
+              @if (offer.basicPrice != null) {
+                <button type="button" class="package-card" [class.selected]="selectedPackage === 'BASIC'" (click)="selectPackage('BASIC')">
+                  <span class="package-badge">BASIC</span>
+                  <div class="package-price">{{ offer.basicPrice | number:'1.2-2' }}€</div>
+                  @if (offer.basicDescription) { <p class="package-desc">{{ offer.basicDescription }}</p> }
+                </button>
+              }
+              @if (offer.standardPrice != null) {
+                <button type="button" class="package-card" [class.selected]="selectedPackage === 'STANDARD'" (click)="selectPackage('STANDARD')">
+                  <span class="package-badge">STANDARD</span>
+                  <div class="package-price">{{ offer.standardPrice | number:'1.2-2' }}€</div>
+                  @if (offer.standardDescription) { <p class="package-desc">{{ offer.standardDescription }}</p> }
+                </button>
+              }
+              @if (offer.premiumPrice != null) {
+                <button type="button" class="package-card" [class.selected]="selectedPackage === 'PREMIUM'" (click)="selectPackage('PREMIUM')">
+                  <span class="package-badge">PREMIUM</span>
+                  <div class="package-price">{{ offer.premiumPrice | number:'1.2-2' }}€</div>
+                  @if (offer.premiumDescription) { <p class="package-desc">{{ offer.premiumDescription }}</p> }
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        @if (hasExtras) {
+          <div class="order-section">
+            <h4 class="section-title"><i class="bi bi-plus-circle"></i> Extras (optionnel)</h4>
+            <div class="extras-options">
+              @for (extra of offerExtras; track extra.name + extra.price) {
+                <label class="extra-option">
+                  <input type="checkbox" [checked]="isExtraSelected(extra)" (change)="toggleExtra(extra)" />
+                  <span>{{ extra.name }}</span>
+                  <span class="extra-price">+ {{ extra.price | number:'1.2-2' }}€</span>
+                </label>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="order-section">
+          <h4 class="section-title"><i class="bi bi-file-text"></i> Détails de la commande</h4>
+        </div>
+        <form [formGroup]="form" (ngSubmit)="submitApplication()" class="order-form">
+          <div class="form-group-order">
+            <label for="message" class="form-label">Décrivez votre projet, vos besoins, budget et délai <span class="required">*</span></label>
+            <textarea id="message" class="form-control form-control-order" formControlName="message" rows="5" placeholder="Exemple : J'ai besoin d'un site vitrine pour mon restaurant avec menu en ligne, galerie photos..." maxlength="2000" [class.is-invalid]="form.get('message')?.invalid && form.get('message')?.touched"></textarea>
+            <div class="char-counter" [class.warning]="(form.get('message')?.value?.length || 0) > 0 && (form.get('message')?.value?.length || 0) < 20" [class.error]="(form.get('message')?.value?.length || 0) > 0 && (form.get('message')?.value?.length || 0) < 20">
+              <span>{{ (form.get('message')?.value?.length || 0) }}/2000 caractères</span>
+              @if ((form.get('message')?.value?.length || 0) > 0 && (form.get('message')?.value?.length || 0) < 20) {
+                <span class="min-warning">(minimum 20 caractères)</span>
+              }
+            </div>
             @if (form.get('message')?.invalid && form.get('message')?.touched) {
-              <div class="invalid-feedback d-block">Message is required (20-2000 characters).</div>
+              <div class="invalid-feedback d-block">La description doit contenir entre 20 et 2000 caractères.</div>
             }
           </div>
-          <div class="mb-3">
-            <label for="proposedBudget" class="form-label">Your budget <span class="text-danger">*</span></label>
-            <input id="proposedBudget" type="number" class="form-control" formControlName="proposedBudget" min="0.01" step="0.01" [class.is-invalid]="form.get('proposedBudget')?.invalid && form.get('proposedBudget')?.touched" />
-            @if (form.get('proposedBudget')?.invalid && form.get('proposedBudget')?.touched) {
-              <div class="invalid-feedback d-block">Valid budget required.</div>
-            }
+
+          <div class="form-row-order">
+            <div class="form-group-order">
+              <label for="proposedBudget" class="form-label">Votre budget <span class="required">*</span></label>
+              <div class="input-group-order">
+                <input id="proposedBudget" type="number" class="form-control form-control-order" formControlName="proposedBudget" min="0.01" step="0.01" placeholder="0.00" [class.is-invalid]="form.get('proposedBudget')?.invalid && form.get('proposedBudget')?.touched" />
+                <span class="input-group-order__suffix">€</span>
+              </div>
+              @if (form.get('proposedBudget')?.invalid && form.get('proposedBudget')?.touched) {
+                <div class="invalid-feedback d-block">Indiquez un budget valide.</div>
+              }
+            </div>
+            <div class="form-group-order">
+              <label for="estimatedDuration" class="form-label">Durée (jours)</label>
+              <input id="estimatedDuration" type="number" class="form-control form-control-order" formControlName="estimatedDuration" min="1" placeholder="Optionnel" />
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="estimatedDuration" class="form-label">Estimated duration (days)</label>
-            <input id="estimatedDuration" type="number" class="form-control" formControlName="estimatedDuration" min="1" />
+          <div class="form-group-order">
+            <label for="portfolioUrl" class="form-label">Portfolio ou lien (optionnel)</label>
+            <input id="portfolioUrl" type="url" class="form-control form-control-order" formControlName="portfolioUrl" placeholder="https://..." />
           </div>
-          <div class="mb-3">
-            <label for="portfolioUrl" class="form-label">Portfolio URL (optional)</label>
-            <input id="portfolioUrl" type="url" class="form-control" formControlName="portfolioUrl" placeholder="https://..." />
+
+          <div class="total-box">
+            <div class="total-row">
+              <span class="total-label">Package sélectionné</span>
+              <span class="total-value">{{ (selectedPackage || '—') }}</span>
+            </div>
+            <div class="total-row">
+              <span class="total-label">Prix / Total</span>
+              <span class="total-amount">{{ totalAmount | number:'1.2-2' }}€</span>
+            </div>
           </div>
+
           @if (submitError) {
-            <div class="alert alert-danger py-2 small" role="alert">{{ submitError }}</div>
+            <div class="alert-custom alert-custom--danger" role="alert">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <span>{{ submitError }}</span>
+            </div>
           }
-          <div class="d-flex gap-2 justify-content-end pt-2">
-            <button type="button" class="btn btn-secondary" (click)="closeApplyModal()" [disabled]="submitting">Cancel</button>
-            <button type="submit" class="btn btn-primary" [disabled]="form.invalid || submitting">{{ submitting ? 'Submitting...' : 'Submit application' }}</button>
+          <div class="submit-block">
+            @if (form.get('message')?.invalid && (form.get('message')?.value?.length || 0) < 20) {
+              <p class="submit-hint">Remplissez la description (min. 20 caractères) pour activer le bouton.</p>
+            }
+            <button type="submit" class="btn-submit-order" [disabled]="form.invalid || submitting">
+              <i class="bi bi-send-fill" *ngIf="!submitting"></i>
+              {{ submitting ? 'Envoi en cours…' : 'Postuler maintenant' }}
+            </button>
+            <p class="order-security-msg"><i class="bi bi-shield-check"></i> Paiement sécurisé • Satisfait ou remboursé</p>
           </div>
         </form>
       </div>

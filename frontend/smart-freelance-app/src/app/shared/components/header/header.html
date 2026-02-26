@@ -207,13 +207,34 @@
             </svg>
           </a>
 
-          <!-- Notifications -->
-          <a routerLink="/dashboard/notifications" class="icon-btn notif-btn" aria-label="Notifications">
-            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M10 2a6 6 0 00-6 6c0 5-2 6-2 6h16s-2-1-2-6a6 6 0 00-6-6z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
-              <path d="M11.73 17a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-            </svg>
-          </a>
+          <!-- Notifications dropdown -->
+          <div class="notification-dropdown-container">
+            <button type="button" class="icon-btn notif-btn" aria-label="Notifications" (click)="toggleNotificationDropdown()" [attr.aria-expanded]="notificationDropdownOpen()">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M10 2a6 6 0 00-6 6c0 5-2 6-2 6h16s-2-1-2-6a6 6 0 00-6-6z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                <path d="M11.73 17a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+              @if (unreadCount() > 0) {
+                <span class="notif-badge">{{ unreadCount() > 99 ? '99+' : unreadCount() }}</span>
+              }
+            </button>
+            @if (notificationDropdownOpen()) {
+              <div class="notification-dropdown" role="menu">
+                <div class="notification-dropdown-header">Notifications</div>
+                @if (notifications().length === 0) {
+                  <p class="notification-empty">No new notifications.</p>
+                } @else {
+                  @for (n of notifications(); track n.id) {
+                    <button type="button" class="notification-item" [class.unread]="!n.read" (click)="onNotificationClick(n)">
+                      <span class="notification-item__title">{{ n.title }}</span>
+                      <span class="notification-item__message">{{ n.message }}</span>
+                      <span class="notification-item__date">{{ n.createdAt | date:'short' }}</span>
+                    </button>
+                  }
+                }
+              </div>
+            }
+          </div>
 
           <!-- Primary CTA -->
           @if (auth.isFreelancer()) {

@@ -35,7 +35,6 @@
   background-clip: text;
 }
 
-<<<<<<< HEAD
 // ——— Statistiques (en bas de page, données backend) ———
 .stats-section {
   margin-top: 3rem;
@@ -437,9 +436,7 @@
   }
 }
 
-=======
 // ── Toolbar ────────────────────────────────────────────────────────
->>>>>>> 3d77214c3395a206df006b98c337604ca8cfb723
 .toolbar {
   display: flex;
   align-items: center;
@@ -454,15 +451,12 @@
     font-size: $font-size-sm;
   }
 
-<<<<<<< HEAD
-=======
   .toolbar-actions {
     display: flex;
     align-items: center;
     gap: $spacing-sm;
   }
 
->>>>>>> 3d77214c3395a206df006b98c337604ca8cfb723
   .btn-refresh {
     padding: $spacing-xs $spacing-md;
     font-size: $font-size-sm;
@@ -653,7 +647,9 @@
   border-radius: $radius-xl;
   border: 2px dashed $neutral-300;
 
-<<<<<<< HEAD
+  .empty-icon { font-size: 52px; display: block; margin-bottom: $spacing-md; }
+  p           { color: $neutral-500; font-size: $font-size-base; margin: 0 0 $spacing-lg; }
+
   .empty-actions {
     display: flex;
     flex-wrap: wrap;
@@ -662,15 +658,7 @@
     margin-top: 1rem;
   }
 
-  .btn--add-offer {
-    margin-top: 0;
-  }
-=======
-  .empty-icon { font-size: 52px; display: block; margin-bottom: $spacing-md; }
-  p           { color: $neutral-500; font-size: $font-size-base; margin: 0 0 $spacing-lg; }
-
-  .btn--add-offer { display: inline-flex; margin-top: $spacing-md; }
->>>>>>> 3d77214c3395a206df006b98c337604ca8cfb723
+  .btn--add-offer { display: inline-flex; margin-top: 0; }
 }
 
 // ── Confirm Modals ─────────────────────────────────────────────────

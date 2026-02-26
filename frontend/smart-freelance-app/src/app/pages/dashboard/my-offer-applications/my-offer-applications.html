@@ -1,6 +1,36 @@
 <div class="my-applications-page">
-  <h1>My Offer Applications</h1>
-  <p class="subtitle">Applications you submitted to freelancer offers.</p>
+  <h1>My Applications</h1>
+  <p class="subtitle">Track your applications and access your contract when accepted.</p>
+
+  <!-- Recommended for you : postuler à d'autres offres -->
+  @if (currentUser) {
+    <section class="recommended-section">
+      <h2 class="recommended-section__title">Recommended for you</h2>
+      <p class="recommended-section__subtitle">Based on your history and browsing.</p>
+      @if (loadingRecommendations) {
+        <p class="recommended-section__loading">Loading recommendations…</p>
+      } @else if (recommendedOffers.length > 0) {
+        <div class="recommended-grid">
+          @for (o of recommendedOffers; track o.id) {
+            <div class="offer-card offer-card--recommended">
+              <div class="offer-content">
+                <span class="offer-badge">Recommended</span>
+                <h3 class="offer-title">{{ o.title }}</h3>
+                <span class="offer-domain">{{ o.domain }}</span>
+                <p class="offer-desc">{{ (o.description | slice:0:100) }}{{ ((o.description || '').length) > 100 ? '...' : '' }}</p>
+                <div class="offer-meta">
+                  <span class="price">{{ o.price | number:'1.2-2' }} ({{ o.durationType }})</span>
+                </div>
+                <a [routerLink]="['/dashboard/browse-offers', o.id]" class="btn-view">View and Apply</a>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+
+  <h2 class="section-applications-title">Your applications</h2>
   <div class="toolbar">
     <span class="count">{{ applications.length }} application(s)</span>
     <button type="button" class="btn-refresh" (click)="load()" [disabled]="loading">{{ loading ? 'Loading...' : 'Refresh' }}</button>
@@ -8,7 +38,7 @@
   <p class="loading-msg" *ngIf="loading && applications.length === 0">Loading...</p>
   <div class="empty-state" *ngIf="!loading && applications.length === 0">
     <span class="empty-icon">📨</span>
-    <p>You have not applied to any offers yet. Browse offers to apply.</p>
+    <p>You have not applied to any offers yet. Use "View and Apply" above to postuler, or <a routerLink="/dashboard/browse-offers">browse all offers</a>.</p>
   </div>
   <div class="applications-list" *ngIf="applications.length > 0">
     <div class="app-card" *ngFor="let app of applications">
@@ -16,9 +46,71 @@
         <h3 class="offer-title">{{ app.offerTitle || 'Offer #' + app.offerId }}</h3>
         <p class="app-message">{{ app.message }}</p>
         <p class="app-meta">Proposed budget: {{ app.proposedBudget | number:'1.2-2' }} - Applied {{ formatDate(app.appliedAt) }}</p>
+        @if (app.portfolioUrl) {
+          <p class="app-meta">Portfolio: <a [href]="app.portfolioUrl" target="_blank" rel="noopener">{{ app.portfolioUrl }}</a></p>
+        }
+        @if (app.status === 'REJECTED' && app.rejectionReason) {
+          <p class="app-rejection" role="alert"><strong>Rejection reason:</strong> {{ app.rejectionReason }}</p>
+        }
         <span class="app-status" [ngClass]="'status-' + app.status">{{ app.status }}</span>
       </div>
-      <a [routerLink]="['/dashboard/browse-offers', app.offerId]" class="btn-view">View offer</a>
+      <div class="app-actions">
+        @if (app.status === 'ACCEPTED') {
+          <p class="app-accepted-msg">Your application was accepted.</p>
+          @if (getContractIdForApplication(app)) {
+            <a [routerLink]="['/dashboard/my-contracts', getContractIdForApplication(app)]" class="btn-access">Accept & access contract</a>
+          } @else {
+            <span class="app-contract-pending">Contract in preparation…</span>
+          }
+        }
+        @if (canWithdrawOrEdit(app)) {
+          <button type="button" class="btn-edit" (click)="openEditModal(app)" [disabled]="actioningId != null">Edit</button>
+          <button type="button" class="btn-withdraw" (click)="withdraw(app)" [disabled]="actioningId != null">
+            {{ actioningId === app.id ? 'Withdrawing...' : 'Withdraw' }}
+          </button>
+          <button type="button" class="btn-delete" (click)="deleteApp(app)" [disabled]="actioningId != null">
+            {{ actioningId === app.id ? 'Deleting...' : 'Delete' }}
+          </button>
+        }
+        <a [routerLink]="['/dashboard/browse-offers', app.offerId]" class="btn-view">View offer</a>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- Modal Edit Application -->
+@if (editModalOpen && editApp) {
+  <div class="modal-overlay" (click)="closeEditModal()">
+    <div class="modal card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit application</h3>
+        <button type="button" class="modal-close" (click)="closeEditModal()" aria-label="Close">×</button>
+      </div>
+      <form (ngSubmit)="submitEdit()" class="modal-body">
+        <div class="form-group">
+          <label for="edit-message">Message <span class="required">*</span></label>
+          <textarea id="edit-message" [(ngModel)]="editForm.message" name="message" rows="4" minlength="20" maxlength="2000" placeholder="Your message (min 20 characters)"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="edit-budget">Proposed budget <span class="required">*</span></label>
+          <input id="edit-budget" type="number" [(ngModel)]="editForm.proposedBudget" name="proposedBudget" min="0.01" step="0.01" placeholder="0.00" />
+        </div>
+        <div class="form-group">
+          <label for="edit-portfolio">Portfolio URL (optional)</label>
+          <input id="edit-portfolio" type="url" [(ngModel)]="editForm.portfolioUrl" name="portfolioUrl" placeholder="https://..." />
+        </div>
+        <div class="form-group">
+          <label for="edit-duration">Estimated duration (days, optional)</label>
+          <input id="edit-duration" type="number" [(ngModel)]="editForm.estimatedDuration" name="estimatedDuration" min="1" placeholder="Optional" />
+        </div>
+        @if (editError) {
+          <p class="modal-error" role="alert">{{ editError }}</p>
+        }
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" (click)="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn-submit" [disabled]="submittingEdit">{{ submittingEdit ? 'Saving...' : 'Save' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

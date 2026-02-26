@@ -1,8 +1,139 @@
 <div class="browse-offers-page">
   <h1>Browse Offers</h1>
   <p class="subtitle">Find freelancer services and apply for the one that fits your needs.</p>
+  @if (auth.isClient()) {
+    <p class="client-hint">
+      <a routerLink="/dashboard/my-offer-applications">My Applications</a> — Track your applications and access your contract when accepted.
+    </p>
+  }
 
-  <!-- Smart Matching : recommandations basées sur historique + comportement -->
+  <!-- ═══════════════════════════════════════════════════════════════
+       RECHERCHE AVANCÉE — chaque changement déclenche un appel AJAX
+       POST /offer/api/offers/search (debounce 350 ms)
+  ════════════════════════════════════════════════════════════════════ -->
+  <form [formGroup]="searchForm" class="search-panel" autocomplete="off">
+
+    <!-- Barre principale ─────────────────────────────────────────── -->
+    <div class="search-bar">
+
+      <!-- Champ keyword : AJAX au fil de la frappe (debounce 350 ms) -->
+      <div class="search-input-wrap">
+        <svg class="search-icon" viewBox="0 0 20 20" fill="none">
+          <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.8"/>
+          <path d="m13 13 3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <input
+          type="text"
+          formControlName="keyword"
+          class="search-input"
+          placeholder="Search title, description, tags…"
+        />
+        @if (loading) {
+          <span class="search-spinner"></span>
+        }
+        @if (searchForm.get('keyword')?.value && !loading) {
+          <button type="button" class="clear-btn"
+            (click)="searchForm.get('keyword')?.setValue('')">✕</button>
+        }
+      </div>
+
+      <!-- Tri ──────────────────────────────────────────────────────── -->
+      <select formControlName="sortIndex" class="sort-select">
+        @for (opt of sortOptions; track $index) {
+          <option [value]="$index">{{ opt.label }}</option>
+        }
+      </select>
+
+      <!-- Toggle filtres avancés ────────────────────────────────────── -->
+      <button type="button" class="btn-advanced"
+        [class.btn-advanced--on]="showAdvanced"
+        (click)="toggleAdvanced()">
+        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+          <path d="M3 5h14M6 10h8M9 15h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        Filters
+        @if (hasActiveFilters) {
+          <span class="active-dot" title="Filtres actifs"></span>
+        }
+      </button>
+
+      <!-- Reset ────────────────────────────────────────────────────── -->
+      @if (hasActiveFilters) {
+        <button type="button" class="btn-reset" (click)="resetFilters()">✕ Reset</button>
+      }
+    </div>
+
+    <!-- Filtres avancés (collapsible) ───────────────────────────── -->
+    @if (showAdvanced) {
+      <div class="advanced-panel">
+        <div class="adv-grid">
+
+          <div class="filter-group">
+            <label class="filter-lbl">Domain</label>
+            <select formControlName="domain" class="filter-ctl">
+              <option value="">All domains</option>
+              @for (d of domains; track d) { <option [value]="d">{{ d }}</option> }
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-lbl">Category</label>
+            <select formControlName="category" class="filter-ctl">
+              <option value="">All categories</option>
+              @for (c of categories; track c) { <option [value]="c">{{ c }}</option> }
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-lbl">Status</label>
+            <select formControlName="offerStatus" class="filter-ctl">
+              <option value="">All statuses</option>
+              @for (s of offerStatuses; track s.value) {
+                <option [value]="s.value">{{ s.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-lbl">Duration type</label>
+            <select formControlName="durationType" class="filter-ctl">
+              <option value="">All types</option>
+              @for (t of durationTypes; track t) {
+                <option [value]="t">{{ t | titlecase }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-lbl">Min price</label>
+            <input type="number" formControlName="minPrice" class="filter-ctl"
+              placeholder="0" min="0" />
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-lbl">Max price</label>
+            <input type="number" formControlName="maxPrice" class="filter-ctl"
+              placeholder="Any" min="0" />
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-lbl">Min rating</label>
+            <select formControlName="minRating" class="filter-ctl">
+              <option [value]="null">Any rating</option>
+              <option [value]="1">★ 1+</option>
+              <option [value]="2">★★ 2+</option>
+              <option [value]="3">★★★ 3+</option>
+              <option [value]="4">★★★★ 4+</option>
+            </select>
+          </div>
+
+        </div><!-- /adv-grid -->
+      </div><!-- /advanced-panel -->
+    }
+
+  </form><!-- /search-panel -->
+
+  <!-- ── Recommandations ──────────────────────────────────────────── -->
   @if (currentUser) {
     <section class="recommended-section">
       <h2 class="recommended-section__title">Recommended for you</h2>
@@ -30,31 +161,84 @@
     </section>
   }
 
+  <!-- ── Toolbar résultats ─────────────────────────────────────────── -->
   <div class="toolbar">
-    <span class="count">{{ totalElements }} offer(s)</span>
-    <button type="button" class="btn-refresh" (click)="load()" [disabled]="loading">{{ loading ? 'Loading...' : 'Refresh' }}</button>
+    <span class="count">
+      {{ totalElements }} offer{{ totalElements !== 1 ? 's' : '' }}
+      @if (hasActiveFilters) {
+        <span class="count__tag">filtered</span>
+      }
+    </span>
+    <button type="button" class="btn-refresh" (click)="search()" [disabled]="loading">
+      {{ loading ? 'Searching…' : 'Refresh' }}
+    </button>
   </div>
-  <p class="loading-msg" *ngIf="loading && offers.length === 0">Loading offers...</p>
-  <div class="empty-state" *ngIf="!loading && offers.length === 0">
-    <span class="empty-icon">🔍</span>
-    <p>No offers available right now. Check back soon!</p>
-  </div>
-  <div class="offers-grid" *ngIf="offers.length > 0">
-    <div class="offer-card" *ngFor="let o of offers">
-      <div class="offer-content">
-        <h3 class="offer-title">{{ o.title }}</h3>
-        <span class="offer-domain">{{ o.domain }}</span>
-        <p class="offer-desc">{{ (o.description | slice:0:100) }}{{ ((o.description || '').length) > 100 ? '...' : '' }}</p>
-        <div class="offer-meta">
-          <span class="price">{{ o.price | number:'1.2-2' }} ({{ o.durationType }})</span>
+
+  <!-- ── Loading skeleton ──────────────────────────────────────────── -->
+  @if (loading && offers.length === 0) {
+    <div class="skeleton-grid">
+      @for (s of [1,2,3,4,5,6]; track s) {
+        <div class="skeleton-card">
+          <div class="sk sk--title"></div>
+          <div class="sk sk--badge"></div>
+          <div class="sk sk--text"></div>
+          <div class="sk sk--text sk--short"></div>
+          <div class="sk sk--btn"></div>
         </div>
-        <a [routerLink]="['/dashboard/browse-offers', o.id]" class="btn-view">View and Apply</a>
-      </div>
+      }
     </div>
+  }
+
+  <!-- ── État vide ─────────────────────────────────────────────────── -->
+  @if (!loading && offers.length === 0) {
+    <div class="empty-state">
+      <span class="empty-icon">🔍</span>
+      <p>No offers match your search.</p>
+      @if (hasActiveFilters) {
+        <button type="button" class="btn-reset" (click)="resetFilters()">Clear all filters</button>
+      }
+    </div>
+  }
+
+  <!-- ── Grille des offres ─────────────────────────────────────────── -->
+  <div class="offers-grid" [class.offers-grid--loading]="loading && offers.length > 0">
+    @for (o of offers; track o.id) {
+      <div class="offer-card">
+        <div class="offer-content">
+          <h3 class="offer-title">{{ o.title }}</h3>
+          <div class="offer-tags">
+            <span class="offer-domain">{{ o.domain }}</span>
+            @if (o.category) { <span class="offer-category">{{ o.category }}</span> }
+          </div>
+          <p class="offer-desc">
+            {{ (o.description | slice:0:120) }}{{ ((o.description || '').length) > 120 ? '…' : '' }}
+          </p>
+          <div class="offer-meta">
+            <span class="price">{{ o.price | number:'1.2-2' }} TND</span>
+            <span class="duration-type">{{ o.durationType | titlecase }}</span>
+            @if (o.rating) {
+              <span class="rating">★ {{ o.rating | number:'1.1-1' }}</span>
+            }
+          </div>
+          <a [routerLink]="['/dashboard/browse-offers', o.id]" class="btn-view">View &amp; Apply</a>
+        </div>
+      </div>
+    }
   </div>
-  <div class="pagination" *ngIf="totalPages > 1">
-    <button type="button" (click)="prev()" [disabled]="page <= 0">Previous</button>
-    <span>Page {{ page + 1 }} of {{ totalPages }}</span>
-    <button type="button" (click)="next()" [disabled]="page >= totalPages - 1">Next</button>
-  </div>
+
+  <!-- ── Pagination ────────────────────────────────────────────────── -->
+  @if (totalPages > 1) {
+    <div class="pagination">
+      <button type="button" (click)="prev()" [disabled]="page <= 0 || loading">‹</button>
+      @for (p of pages; track p) {
+        <button type="button" class="page-btn"
+          [class.page-btn--active]="p === page"
+          [disabled]="loading"
+          (click)="goToPage(p)">{{ p + 1 }}</button>
+      }
+      <button type="button" (click)="next()" [disabled]="page >= totalPages - 1 || loading">›</button>
+      <span class="page-info">Page {{ page + 1 }}/{{ totalPages }}</span>
+    </div>
+  }
+
 </div>

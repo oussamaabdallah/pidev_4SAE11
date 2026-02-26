@@ -102,7 +102,6 @@
     }
   }
 
-<<<<<<< HEAD
   .translate-section {
     padding: 1.5rem 2rem;
     margin-bottom: 2rem;
@@ -322,11 +321,6 @@
     }
   }
 
-  .applications-section h2 {
-    margin-bottom: 1rem;
-    font-size: 1.25rem;
-    color: #1e293b;
-=======
   // ── Applications Section ────────────────────────────────────────
   .applications-section {
     h2 {
@@ -335,7 +329,6 @@
       font-weight: $font-weight-bold;
       color: $neutral-800;
     }
->>>>>>> 3d77214c3395a206df006b98c337604ca8cfb723
   }
 
   .loading-msg,
@@ -364,10 +357,15 @@
     align-items: flex-start;
     gap: $spacing-md;
     transition: $transition-base;
+    position: relative;
 
     &:hover {
       border-color: $primary-500;
       box-shadow: 0 4px 16px rgba($primary-500, 0.08);
+    }
+
+    &--unread {
+      border-left: 4px solid $primary-500;
     }
   }
 
@@ -375,11 +373,33 @@
     flex: 1;
     min-width: 0;
 
+    .app-badge-unread {
+      display: inline-block;
+      padding: 2px $spacing-sm;
+      font-size: 10px;
+      font-weight: $font-weight-bold;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      background: $primary-500;
+      color: $white;
+      border-radius: $radius-full;
+      margin-bottom: $spacing-xs;
+    }
+
     .app-message {
       margin: 0 0 $spacing-xs;
       color: $neutral-700;
       font-size: $font-size-sm;
       line-height: $line-height-relaxed;
+    }
+
+    .app-rejection {
+      margin: $spacing-sm 0 0;
+      padding: $spacing-sm;
+      background: $error-50;
+      color: $error-700;
+      border-radius: $radius-md;
+      font-size: $font-size-sm;
     }
   }
 
@@ -387,6 +407,12 @@
     font-size: $font-size-xs;
     color: $neutral-500;
     margin: 0 0 $spacing-xs;
+
+    a {
+      color: $primary-600;
+      text-decoration: none;
+      &:hover { text-decoration: underline; }
+    }
   }
 
   .app-status {
@@ -399,12 +425,18 @@
     border-radius: $radius-full;
     background: $neutral-100;
     color: $neutral-600;
+
+    &--PENDING { background: $info-100; color: $info-600; }
+    &--ACCEPTED { background: $success-50; color: $success-700; }
+    &--REJECTED { background: $error-50; color: $error-700; }
+    &--SHORTLISTED { background: $neutral-200; color: $neutral-700; }
   }
 
   .app-actions {
     display: flex;
     gap: $spacing-sm;
     flex-shrink: 0;
+    flex-wrap: wrap;
 
     .btn-accept {
       padding: $spacing-xs $spacing-md;
@@ -417,6 +449,21 @@
       transition: $transition-base;
 
       &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: $shadow-primary; }
+      &:disabled { opacity: 0.6; cursor: not-allowed; }
+    }
+
+    .btn-shortlist {
+      padding: $spacing-xs $spacing-md;
+      background: $neutral-100;
+      color: $neutral-700;
+      border: 1px solid $neutral-300;
+      border-radius: $radius-full;
+      cursor: pointer;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      transition: $transition-base;
+
+      &:hover:not(:disabled) { background: $neutral-200; }
       &:disabled { opacity: 0.6; cursor: not-allowed; }
     }
 
@@ -435,18 +482,144 @@
       &:disabled { opacity: 0.6; cursor: not-allowed; }
     }
 
-    .btn-create-project {
+    .btn-mark-read {
       padding: $spacing-xs $spacing-md;
-      background: $info-100;
-      color: $info-600;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: $neutral-600;
+      background: transparent;
+      border: 1px solid $neutral-300;
+      border-radius: $radius-full;
+      cursor: pointer;
+      transition: $transition-base;
+
+      &:hover:not(:disabled) { background: $neutral-100; }
+    }
+
+  }
+}
+
+// ── Reject modal (global pour z-index) ─────────────────────────────
+.show-offer-page + .modal-overlay,
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: $spacing-lg;
+
+  .modal {
+    background: $white;
+    border-radius: $radius-xl;
+    box-shadow: $shadow-lg;
+    max-width: 420px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: $spacing-lg $spacing-xl;
+      border-bottom: 1px solid $neutral-200;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      color: $neutral-900;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: $neutral-500;
+      cursor: pointer;
+      padding: 0 $spacing-xs;
+      line-height: 1;
+      &:hover { color: $neutral-700; }
+    }
+
+    .modal-body {
+      padding: $spacing-xl;
+    }
+
+    .modal-text {
+      margin: 0 0 $spacing-md;
+      font-size: $font-size-sm;
+      color: $neutral-600;
+    }
+
+    .form-group {
+      margin-bottom: $spacing-md;
+
+      label {
+        display: block;
+        margin-bottom: $spacing-xs;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-medium;
+        color: $neutral-700;
+      }
+
+      textarea {
+        width: 100%;
+        padding: $spacing-sm $spacing-md;
+        border: 1.5px solid $neutral-300;
+        border-radius: $radius-md;
+        font-size: $font-size-base;
+        resize: vertical;
+        min-height: 80px;
+        box-sizing: border-box;
+        &:focus {
+          outline: none;
+          border-color: $primary-500;
+        }
+      }
+    }
+
+    .modal-error {
+      margin: 0 0 $spacing-md;
+      padding: $spacing-sm;
+      background: $error-50;
+      color: $error-700;
+      border-radius: $radius-md;
+      font-size: $font-size-sm;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: $spacing-md;
+      justify-content: flex-end;
+      margin-top: $spacing-lg;
+    }
+
+    .btn-cancel {
+      padding: $spacing-sm $spacing-lg;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: $neutral-600;
+      background: $neutral-100;
       border: none;
       border-radius: $radius-full;
       cursor: pointer;
+      &:hover { background: $neutral-200; }
+    }
+
+    .btn-reject-confirm {
+      padding: $spacing-sm $spacing-lg;
       font-size: $font-size-sm;
       font-weight: $font-weight-semibold;
-      transition: $transition-base;
-
-      &:hover:not(:disabled) { background: $info-500; color: $white; }
+      color: $white;
+      background: $error-500;
+      border: none;
+      border-radius: $radius-full;
+      cursor: pointer;
       &:disabled { opacity: 0.6; cursor: not-allowed; }
     }
   }

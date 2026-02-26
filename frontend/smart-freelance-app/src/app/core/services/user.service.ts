@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, map, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { SKIP_UNAUTHORIZED_LOGOUT_HEADER } from '../interceptors/unauthorized-interceptor';
 
 export type UserRole = 'CLIENT' | 'FREELANCER' | 'ADMIN';
 
@@ -53,15 +54,21 @@ export class UserService {
     return this.http.get<User[]>(USER_API);
   }
 
+  /** Ne pas déclencher de logout en cas de 401 (affichage optionnel, ex. profil freelancer). */
   getById(id: number): Observable<User | null> {
-    return this.http.get<User>(`${USER_API}/${id}`).pipe(
+    return this.http.get<User>(`${USER_API}/${id}`, {
+      headers: { [SKIP_UNAUTHORIZED_LOGOUT_HEADER]: 'true' },
+    }).pipe(
       catchError(() => of(null))
     );
   }
 
+  /** Ne pas déclencher de logout en cas de 401 (évite déconnexion sur les pages client si le service User renvoie 401). */
   getByEmail(email: string): Observable<User | null> {
     const encoded = encodeURIComponent(email);
-    return this.http.get<User>(`${USER_API}/email/${encoded}`).pipe(
+    return this.http.get<User>(`${USER_API}/email/${encoded}`, {
+      headers: { [SKIP_UNAUTHORIZED_LOGOUT_HEADER]: 'true' },
+    }).pipe(
       catchError(() => of(null))
     );
   }

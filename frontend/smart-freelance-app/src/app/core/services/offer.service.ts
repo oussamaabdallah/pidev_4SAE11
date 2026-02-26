@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, map, of, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { SKIP_ERROR_TOAST_HEADER } from '../interceptors/error-toast.interceptor';
+import { SKIP_UNAUTHORIZED_LOGOUT_HEADER } from '../interceptors/unauthorized-interceptor';
 
 const OFFER_API = `${environment.apiGatewayUrl}/offer/api/offers`;
 const APPLICATION_API = `${environment.apiGatewayUrl}/offer/api/applications`;
@@ -33,6 +35,13 @@ export interface Offer {
   rating?: number;
   communicationScore?: number;
   tags?: string;
+  basicPrice?: number;
+  standardPrice?: number;
+  premiumPrice?: number;
+  basicDescription?: string;
+  standardDescription?: string;
+  premiumDescription?: string;
+  extrasJson?: string;
   imageUrl?: string;
   viewsCount?: number;
   isFeatured?: boolean;
@@ -98,6 +107,10 @@ export interface OfferApplication {
   respondedAt?: string;
   acceptedAt?: string;
   canBeModified?: boolean;
+  selectedPackage?: string;
+  selectedExtrasJson?: string;
+  totalAmount?: number;
+  warningMessage?: string;
 }
 
 export interface OfferApplicationRequest {
@@ -108,6 +121,9 @@ export interface OfferApplicationRequest {
   portfolioUrl?: string;
   attachmentUrl?: string;
   estimatedDuration?: number;
+  selectedPackage?: string;
+  selectedExtrasJson?: string;
+  totalAmount?: number;
 }
 
 export interface PageResponse<T> {
@@ -134,16 +150,19 @@ export interface DashboardStats {
 export class OfferService {
   constructor(private http: HttpClient) {}
 
+  /** Options pour ne pas déclencher de logout en cas de 401 (pages client). */
+  private readonly skipLogoutHeaders = { [SKIP_UNAUTHORIZED_LOGOUT_HEADER]: 'true' };
+
   // ---------- Offers ----------
   getActiveOffers(page = 0, size = 10): Observable<PageResponse<Offer>> {
     const params = new HttpParams().set('page', String(page)).set('size', String(size));
-    return this.http.get<PageResponse<Offer>>(OFFER_API, { params }).pipe(
+    return this.http.get<PageResponse<Offer>>(OFFER_API, { params, headers: this.skipLogoutHeaders }).pipe(
       catchError(() => of({ content: [], totalElements: 0, totalPages: 0, size, number: page, first: true, last: true }))
     );
   }
 
   getOfferById(id: number): Observable<Offer | null> {
-    return this.http.get<Offer>(`${OFFER_API}/${id}`).pipe(catchError(() => of(null)));
+    return this.http.get<Offer>(`${OFFER_API}/${id}`, { headers: this.skipLogoutHeaders }).pipe(catchError(() => of(null)));
   }
 
   getOffersByFreelancer(freelancerId: number): Observable<Offer[]> {
@@ -155,7 +174,7 @@ export class OfferService {
   }
 
   searchOffers(filter: OfferFilterRequest): Observable<PageResponse<Offer>> {
-    return this.http.post<PageResponse<Offer>>(`${OFFER_API}/search`, filter).pipe(
+    return this.http.post<PageResponse<Offer>>(`${OFFER_API}/search`, filter, { headers: this.skipLogoutHeaders }).pipe(
       catchError(() =>
         of({
           content: [],
@@ -208,19 +227,20 @@ export class OfferService {
   }
 
   // ---------- Applications ----------
+  /** POST candidature (client) : 401 ne doit pas déclencher de logout. */
   applyToOffer(request: OfferApplicationRequest): Observable<OfferApplication | null> {
-    return this.http.post<OfferApplication>(APPLICATION_API, request).pipe(
+    return this.http.post<OfferApplication>(APPLICATION_API, request, { headers: this.skipLogoutHeaders }).pipe(
       catchError((err) => throwError(() => err))
     );
   }
 
   getApplicationById(id: number): Observable<OfferApplication | null> {
-    return this.http.get<OfferApplication>(`${APPLICATION_API}/${id}`).pipe(catchError(() => of(null)));
+    return this.http.get<OfferApplication>(`${APPLICATION_API}/${id}`, { headers: this.skipLogoutHeaders }).pipe(catchError(() => of(null)));
   }
 
   getApplicationsByOffer(offerId: number, page = 0, size = 20): Observable<PageResponse<OfferApplication>> {
     const params = new HttpParams().set('page', String(page)).set('size', String(size));
-    return this.http.get<PageResponse<OfferApplication>>(`${APPLICATION_API}/offer/${offerId}`, { params }).pipe(
+    return this.http.get<PageResponse<OfferApplication>>(`${APPLICATION_API}/offer/${offerId}`, { params, headers: this.skipLogoutHeaders }).pipe(
       catchError(() =>
         of({ content: [], totalElements: 0, totalPages: 0, size, number: page, first: true, last: true })
       )
@@ -229,11 +249,40 @@ export class OfferService {
 
   getApplicationsByClient(clientId: number, page = 0, size = 20): Observable<PageResponse<OfferApplication>> {
     const params = new HttpParams().set('page', String(page)).set('size', String(size));
-    return this.http.get<PageResponse<OfferApplication>>(`${APPLICATION_API}/client/${clientId}`, { params }).pipe(
+    return this.http.get<PageResponse<OfferApplication>>(`${APPLICATION_API}/client/${clientId}`, { params, headers: this.skipLogoutHeaders }).pipe(
       catchError(() =>
         of({ content: [], totalElements: 0, totalPages: 0, size, number: page, first: true, last: true })
       )
     );
+  }
+
+  /** Candidatures en attente (toutes offres). */
+  getPendingApplications(): Observable<OfferApplication[]> {
+    return this.http.get<OfferApplication[]>(`${APPLICATION_API}/pending`).pipe(catchError(() => of([])));
+  }
+
+  /** Candidatures non lues pour un freelancer. */
+  getUnreadApplicationsByFreelancer(freelancerId: number): Observable<OfferApplication[]> {
+    return this.http
+      .get<OfferApplication[]>(`${APPLICATION_API}/unread/freelancer/${freelancerId}`)
+      .pipe(catchError(() => of([])));
+  }
+
+  /** Candidatures d'une offre par statut. */
+  getApplicationsByOfferAndStatus(offerId: number, status: ApplicationStatus): Observable<OfferApplication[]> {
+    return this.http
+      .get<OfferApplication[]>(`${APPLICATION_API}/offer/${offerId}/status/${status}`)
+      .pipe(catchError(() => of([])));
+  }
+
+  /** Nombre de candidatures en attente pour une offre. */
+  countPendingApplications(offerId: number): Observable<number> {
+    return this.http.get<number>(`${APPLICATION_API}/offer/${offerId}/pending/count`).pipe(catchError(() => of(0)));
+  }
+
+  /** Candidatures récentes. */
+  getRecentApplications(): Observable<OfferApplication[]> {
+    return this.http.get<OfferApplication[]>(`${APPLICATION_API}/recent`).pipe(catchError(() => of([])));
   }
 
   acceptApplication(id: number, freelancerId: number): Observable<OfferApplication | null> {
@@ -250,6 +299,15 @@ export class OfferService {
     return this.http.patch<OfferApplication>(`${APPLICATION_API}/${id}/reject`, null, { params }).pipe(catchError(() => of(null)));
   }
 
+  /** Mettre une candidature en liste courte (freelancer). */
+  shortlistApplication(id: number, freelancerId: number): Observable<OfferApplication | null> {
+    return this.http
+      .patch<OfferApplication>(`${APPLICATION_API}/${id}/shortlist`, null, {
+        params: { freelancerId: String(freelancerId) },
+      })
+      .pipe(catchError(() => of(null)));
+  }
+
   markApplicationAsRead(id: number, freelancerId: number): Observable<OfferApplication | null> {
     return this.http
       .patch<OfferApplication>(`${APPLICATION_API}/${id}/mark-read`, null, {
@@ -264,6 +322,21 @@ export class OfferService {
         params: { clientId: String(clientId) },
       })
       .pipe(catchError(() => of(null)));
+  }
+
+  /** Modifier une candidature (client, tant qu'elle est modifiable). */
+  updateApplication(id: number, request: OfferApplicationRequest): Observable<OfferApplication | null> {
+    return this.http.put<OfferApplication>(`${APPLICATION_API}/${id}`, request).pipe(catchError(() => of(null)));
+  }
+
+  /** Supprimer une candidature (client). */
+  deleteApplication(id: number, clientId: number): Observable<boolean> {
+    return this.http
+      .delete(`${APPLICATION_API}/${id}`, { params: { clientId: String(clientId) }, observe: 'response' })
+      .pipe(
+        map((res) => res.status >= 200 && res.status < 300),
+        catchError(() => of(false))
+      );
   }
 
   // ---------- Dashboard (statistiques freelancer) ----------
@@ -316,27 +389,29 @@ export class OfferService {
   /** Smart Matching : recommandations d'offres pour un client (historique + comportement) */
   getRecommendedOffers(clientId: number, limit = 20): Observable<Offer[]> {
     return this.http
-      .get<Offer[]>(`${OFFER_API}/recommendations/client/${clientId}`, { params: { limit: String(limit) } })
+      .get<Offer[]>(`${OFFER_API}/recommendations/client/${clientId}`, { params: { limit: String(limit) }, headers: this.skipLogoutHeaders })
       .pipe(catchError(() => of([])));
   }
 
   /** Enregistrer une vue d'offre par un client (pour Smart Matching / comportement) */
   recordOfferView(clientId: number, offerId: number): Observable<void> {
-    return this.http.post<void>(`${OFFER_API}/views`, { clientId, offerId }).pipe(catchError(() => of(undefined)));
+    return this.http.post<void>(`${OFFER_API}/views`, { clientId, offerId }, { headers: this.skipLogoutHeaders }).pipe(catchError(() => of(undefined)));
   }
 
   /** Q&A : liste des questions-réponses pour une offre */
   getOfferQuestions(offerId: number): Observable<OfferQuestionResponse[]> {
     return this.http
-      .get<OfferQuestionResponse[]>(`${OFFER_API}/${offerId}/questions`)
+      .get<OfferQuestionResponse[]>(`${OFFER_API}/${offerId}/questions`, { headers: this.skipLogoutHeaders })
       .pipe(catchError(() => of([])));
   }
 
-  /** Q&A : un client pose une question */
-  addOfferQuestion(offerId: number, clientId: number, questionText: string): Observable<OfferQuestionResponse | null> {
-    return this.http
-      .post<OfferQuestionResponse>(`${OFFER_API}/${offerId}/questions`, { questionText }, { params: { clientId: String(clientId) } })
-      .pipe(catchError(() => of(null)));
+  /** Q&A : un client pose une question (en cas d'erreur, le composant affiche "Failed to send question." en toast) */
+  addOfferQuestion(offerId: number, clientId: number, questionText: string): Observable<OfferQuestionResponse> {
+    return this.http.post<OfferQuestionResponse>(
+      `${OFFER_API}/${offerId}/questions`,
+      { questionText },
+      { params: { clientId: String(clientId) }, headers: { [SKIP_ERROR_TOAST_HEADER]: 'true', ...this.skipLogoutHeaders } }
+    );
   }
 
   /** Q&A : le freelancer répond à une question */

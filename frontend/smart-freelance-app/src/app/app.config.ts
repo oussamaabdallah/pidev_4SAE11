@@ -5,13 +5,14 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth-interceptor';
 import { unauthorizedInterceptor } from './core/interceptors/unauthorized-interceptor';
+import { errorToastInterceptor } from './core/interceptors/error-toast.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideHttpClient(
-      withInterceptors([authInterceptor, unauthorizedInterceptor])
+      withInterceptors([authInterceptor, unauthorizedInterceptor, errorToastInterceptor])
     ),
   ]
 };

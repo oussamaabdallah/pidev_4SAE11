@@ -1,10 +1,13 @@
 <div class="projects-container">
   <div class="projects-header">
-    <h2 class="section-title">Projects List</h2>
-    <a routerLink="add" class="btn btn--add-project" *ngIf="canManageProjects">
+    <h2 class="section-title">{{ isBrowseJobs ? 'Browse Jobs' : 'Projects List' }}</h2>
+    <a routerLink="add" class="btn btn--add-project" *ngIf="canManageProjects && !isBrowseJobs">
       + Add Project
     </a>
   </div>
+  <p class="page-hint" *ngIf="isBrowseJobs && userRole === 'FREELANCER'">
+    Find projects and apply with your proposal. Click <strong>Show</strong> for details, then <strong>Apply</strong> to submit your application.
+  </p>
 
   <div class="toolbar">
     <span class="toolbar-count">{{ filteredProjects.length }} project(s)</span>
@@ -104,7 +107,7 @@
             [routerLink]="[project.id, 'edit']" 
             class="btn btn--update" 
             title="Edit this project"
-            *ngIf="canManageProjects"
+            *ngIf="canManageProjects && !isBrowseJobs"
           >
             Update
           </button>
@@ -113,19 +116,19 @@
             (click)="openDeleteModal(project)" 
             class="btn btn--delete" 
             title="Delete this project"
-            *ngIf="canManageProjects"
+            *ngIf="canManageProjects && !isBrowseJobs"
           >
             Delete
           </button>
 
-          <button 
+          <a 
             [routerLink]="['/dashboard/my-applications/add', project.id]"
-            class="btn btn--update" 
-            title="Apply to this project"
+            class="btn btn--apply"
+            title="Postuler à ce projet"
             *ngIf="userRole === 'FREELANCER'"
           >
-            Apply
-          </button>
+            Postuler
+          </a>
         </div>
       </div>
     </div>
@@ -135,7 +138,8 @@
   <div class="empty-state" 
        *ngIf="!isLoading && !errorMessage && filteredProjects.length === 0">
     <p>No projects found.</p>
-    <a routerLink="add" class="btn btn--add-project">Create your first project</a>
+    <a routerLink="add" class="btn btn--add-project" *ngIf="canManageProjects && !isBrowseJobs">Create your first project</a>
+    <p class="empty-hint" *ngIf="isBrowseJobs && userRole === 'FREELANCER'">Check back later for new job openings.</p>
   </div>
 
   <!-- Delete confirmation modal (like user management) -->

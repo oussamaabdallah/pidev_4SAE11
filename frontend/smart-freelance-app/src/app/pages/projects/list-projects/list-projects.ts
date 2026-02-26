@@ -256,4 +256,9 @@ export class ListProjects implements OnInit, OnDestroy {
   onStatusChange(): void {
     this.applyFilters();
   }
+
+  /** True si on est sur la page Browse Jobs (freelancers postulent aux projets). */
+  get isBrowseJobs(): boolean {
+    return this.router.url.includes('browse-jobs');
+  }
 }

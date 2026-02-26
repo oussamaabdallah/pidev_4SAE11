@@ -29,4 +29,11 @@ public class OfferApplicationResponse {
     private LocalDateTime respondedAt;
     private LocalDateTime acceptedAt;
     private Boolean canBeModified;
+    private String selectedPackage;
+    private String selectedExtrasJson;
+    private BigDecimal totalAmount;
+    /** ID du contrat créé après acceptation (pour accès "Mes projets en cours", mise à jour progression). */
+    private Long contractId;
+    /** Message d'avertissement (ex: contrat non créé car microservice indisponible). */
+    private String warningMessage;
 }
