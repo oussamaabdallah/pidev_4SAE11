@@ -20,6 +20,8 @@ import org.example.offer.service.OfferQuestionService;
 import org.example.offer.service.OfferService;
 import org.example.offer.service.SmartMatchingService;
 import org.example.offer.service.TranslationService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,12 +35,16 @@ import java.util.Map;
 @RequestMapping("/api/offers")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@RefreshScope
 public class OfferController {
 
     private final OfferService offerService;
     private final TranslationService translationService;
     private final SmartMatchingService smartMatchingService;
     private final OfferQuestionService offerQuestionService;
+
+    @Value("${welcome.message:Bienvenue sur le microservice Offer !}")
+    private String welcomeMessage;
 
     /**
      * CREATE - Créer une nouvelle offre
@@ -300,5 +306,15 @@ public class OfferController {
             @Valid @RequestBody AnswerQuestionRequest request) {
         OfferQuestionResponse response = offerQuestionService.answerQuestion(questionId, freelancerId, request);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Message de bienvenue chargé depuis le Config Server (Git)
+     * GET /api/offers/welcome
+     * Peut être mis à jour dynamiquement via POST /actuator/refresh
+     */
+    @GetMapping("/welcome")
+    public String welcome() {
+        return welcomeMessage;
     }
 }
