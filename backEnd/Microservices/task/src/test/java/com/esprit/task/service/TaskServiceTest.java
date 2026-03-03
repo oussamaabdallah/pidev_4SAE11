@@ -1,6 +1,7 @@
 package com.esprit.task.service;
 
 import com.esprit.task.client.ProjectClient;
+import com.esprit.task.service.TaskNotificationService;
 import com.esprit.task.dto.TaskStatsDto;
 import com.esprit.task.entity.Task;
 import com.esprit.task.entity.TaskPriority;
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
@@ -39,6 +41,9 @@ class TaskServiceTest {
 
     @Mock
     private ProjectClient projectClient;
+
+    @Mock
+    private TaskNotificationService taskNotificationService;
 
     @InjectMocks
     private TaskService taskService;
@@ -145,6 +150,7 @@ class TaskServiceTest {
         Task existing = task(1L);
         Task updated = task(1L);
         updated.setTitle("Updated");
+        updated.setStatus(TaskStatus.TODO);
         when(taskRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(taskRepository.save(any())).thenReturn(updated);
 
@@ -152,16 +158,144 @@ class TaskServiceTest {
 
         assertThat(result).isNotNull();
         verify(taskRepository).save(any());
+        verify(taskNotificationService, never()).notifyTaskStatusUpdate(any());
     }
 
     @Test
-    void patchStatus_updatesStatus() {
+    void update_whenStatusChanged_notifiesClient() {
+        Task existing = task(1L);
+        existing.setStatus(TaskStatus.TODO);
+        Task updated = task(1L);
+        updated.setTitle("Updated");
+        updated.setStatus(TaskStatus.IN_PROGRESS);
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(taskRepository.save(any())).thenAnswer(inv -> {
+            Task s = inv.getArgument(0);
+            s.setStatus(TaskStatus.IN_PROGRESS);
+            return s;
+        });
+
+        taskService.update(1L, updated);
+
+        verify(taskNotificationService).notifyTaskStatusUpdate(any());
+    }
+
+    @Test
+    void patchStatus_updatesStatusAndNotifies() {
+        Task t = task(1L);
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(t));
+        when(taskRepository.save(any())).thenAnswer(inv -> {
+            Task saved = inv.getArgument(0);
+            saved.setStatus(TaskStatus.IN_PROGRESS);
+            return saved;
+        });
+
+        taskService.patchStatus(1L, TaskStatus.IN_PROGRESS);
+
+        verify(taskRepository).save(any());
+        verify(taskNotificationService).notifyTaskStatusUpdate(any());
+    }
+
+    @Test
+    void findAllFiltered_returnsPaginatedResults() {
+        Task t = task(1L);
+        Page<Task> page = new PageImpl<>(List.of(t), PageRequest.of(0, 20), 1);
+        when(taskRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+
+        Page<Task> result = taskService.findAllFiltered(
+                Optional.of(1L), Optional.empty(), Optional.empty(),
+                Optional.empty(), Optional.empty(), Optional.empty(),
+                Optional.empty(), Optional.empty(), Optional.empty(),
+                PageRequest.of(0, 20));
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void findByContractId_returnsList() {
+        Task t = task(1L);
+        when(taskRepository.findByContractIdOrderByProjectIdAscOrderIndexAsc(1L)).thenReturn(List.of(t));
+
+        List<Task> result = taskService.findByContractId(1L);
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void findByAssigneeId_returnsList() {
+        Task t = task(1L);
+        t.setAssigneeId(10L);
+        when(taskRepository.findByAssigneeIdOrderByProjectIdAscOrderIndexAsc(10L)).thenReturn(List.of(t));
+
+        List<Task> result = taskService.findByAssigneeId(10L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getAssigneeId()).isEqualTo(10L);
+    }
+
+    @Test
+    void getStatsByFreelancer_returnsStats() {
+        Task t = task(1L);
+        t.setStatus(TaskStatus.DONE);
+        when(taskRepository.findAll(any(Specification.class))).thenReturn(List.of(t, task(2L)));
+
+        TaskStatsDto result = taskService.getStatsByFreelancer(10L, Optional.empty(), Optional.empty());
+
+        assertThat(result.getTotalTasks()).isEqualTo(2);
+        assertThat(result.getDoneCount()).isEqualTo(1);
+    }
+
+    @Test
+    void getDashboardStats_returnsStats() {
+        when(taskRepository.findAll()).thenReturn(List.of(task(1L), task(2L)));
+        when(taskRepository.findOverdueTasks(any(LocalDate.class))).thenReturn(List.of());
+
+        TaskStatsDto result = taskService.getDashboardStats();
+
+        assertThat(result.getTotalTasks()).isEqualTo(2);
+    }
+
+    @Test
+    void patchAssignee_updatesAssignee() {
         Task t = task(1L);
         when(taskRepository.findById(1L)).thenReturn(Optional.of(t));
         when(taskRepository.save(any())).thenReturn(t);
 
-        taskService.patchStatus(1L, TaskStatus.IN_PROGRESS);
+        taskService.patchAssignee(1L, 10L);
 
+        verify(taskRepository).save(any());
+    }
+
+    @Test
+    void reorder_updatesOrderIndex() {
+        Task t = task(1L);
+        t.setOrderIndex(5);
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(t));
+        when(taskRepository.save(any())).thenReturn(t);
+
+        taskService.reorder(List.of(1L));
+
+        verify(taskRepository).save(any());
+    }
+
+    @Test
+    void create_whenMaxOrderIndexNull_setsOrderIndexZero() {
+        Task t = task(null);
+        t.setStatus(null);
+        t.setPriority(null);
+        t.setOrderIndex(null);
+        when(taskRepository.findMaxOrderIndexByProject(1L)).thenReturn(null);
+        when(taskRepository.save(any())).thenAnswer(inv -> {
+            Task saved = inv.getArgument(0);
+            saved.setId(1L);
+            saved.setOrderIndex(0);
+            return saved;
+        });
+
+        Task result = taskService.create(t);
+
+        assertThat(result).isNotNull();
         verify(taskRepository).save(any());
     }
 
