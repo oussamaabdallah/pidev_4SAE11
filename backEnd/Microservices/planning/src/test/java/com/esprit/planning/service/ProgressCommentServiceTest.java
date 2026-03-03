@@ -4,6 +4,7 @@ import com.esprit.planning.client.UserClient;
 import com.esprit.planning.dto.UserDto;
 import com.esprit.planning.entity.ProgressComment;
 import com.esprit.planning.entity.ProgressUpdate;
+import com.esprit.planning.exception.EntityNotFoundException;
 import com.esprit.planning.repository.ProgressCommentRepository;
 import com.esprit.planning.repository.ProgressUpdateRepository;
 import org.junit.jupiter.api.Test;
@@ -110,7 +111,7 @@ class ProgressCommentServiceTest {
         when(progressCommentRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> progressCommentService.findById(999L))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("ProgressComment not found");
     }
 
@@ -157,7 +158,7 @@ class ProgressCommentServiceTest {
         when(progressUpdateRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> progressCommentService.create(999L, 5L, "Msg"))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("ProgressUpdate not found");
     }
 

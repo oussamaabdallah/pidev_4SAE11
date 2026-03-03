@@ -18,6 +18,9 @@ backEnd/Microservices/Offer/src/main/resources/application-local.properties
 # GitHub token (never commit); set GITHUB_TOKEN env from this file locally
 githubToken.txt
 
+# MCP config (may contain SonarQube token and other secrets)
+.cursor/mcp.json
+
 # Google Cloud / Calendar API credentials (never commit)
 *google*credentials*.json
 googleproject-*.json

@@ -71,12 +71,12 @@ pipeline {
 
         stage('Docker Push') {
             // Remove 'when' block to push on every branch. Kept for main/master only to avoid pushing feature branches.
-            when {
+            /**when {
                 anyOf {
                     branch 'main'
                     branch 'master'
                 }
-            }
+            }**/
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'DockerHubCrendentials') {

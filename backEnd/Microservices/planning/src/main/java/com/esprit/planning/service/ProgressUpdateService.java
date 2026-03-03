@@ -6,6 +6,7 @@ import com.esprit.planning.dto.ProgressUpdateRequest;
 import com.esprit.planning.dto.ProgressUpdateValidationResponse;
 import com.esprit.planning.entity.ProgressUpdate;
 import com.esprit.planning.entity.ProjectDeadlineSync;
+import com.esprit.planning.exception.EntityNotFoundException;
 import com.esprit.planning.exception.ProgressCannotDecreaseException;
 import com.esprit.planning.repository.ProgressCommentRepository;
 import com.esprit.planning.repository.ProgressUpdateRepository;
@@ -69,7 +70,7 @@ public class ProgressUpdateService {
     @Transactional(readOnly = true)
     public ProgressUpdate findById(Long id) {
         return progressUpdateRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("ProgressUpdate not found with id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("ProgressUpdate", id));
     }
 
     /** Returns all progress updates for the given project. */

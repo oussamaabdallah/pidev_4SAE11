@@ -3,6 +3,7 @@ package com.esprit.planning.service;
 import com.esprit.planning.client.ProjectClient;
 import com.esprit.planning.dto.*;
 import com.esprit.planning.entity.ProgressUpdate;
+import com.esprit.planning.exception.EntityNotFoundException;
 import com.esprit.planning.exception.ProgressCannotDecreaseException;
 import com.esprit.planning.repository.ProgressCommentRepository;
 import com.esprit.planning.repository.ProgressUpdateRepository;
@@ -83,7 +84,7 @@ class ProgressUpdateServiceTest {
         when(progressUpdateRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> progressUpdateService.findById(999L))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("ProgressUpdate not found");
     }
 

@@ -3,6 +3,7 @@ package com.esprit.planning.service;
 import com.esprit.planning.client.UserClient;
 import com.esprit.planning.dto.UserDto;
 import com.esprit.planning.entity.ProgressComment;
+import com.esprit.planning.exception.EntityNotFoundException;
 import com.esprit.planning.entity.ProgressUpdate;
 import com.esprit.planning.repository.ProgressCommentRepository;
 import com.esprit.planning.repository.ProgressUpdateRepository;
@@ -45,7 +46,7 @@ public class ProgressCommentService {
     @Transactional(readOnly = true)
     public ProgressComment findById(Long id) {
         return progressCommentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("ProgressComment not found with id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("ProgressComment", id));
     }
 
     /** Returns all comments for the given progress update. */
@@ -64,7 +65,7 @@ public class ProgressCommentService {
     @Transactional
     public ProgressComment create(Long progressUpdateId, Long userId, String message) {
         ProgressUpdate progressUpdate = progressUpdateRepository.findById(progressUpdateId)
-                .orElseThrow(() -> new RuntimeException("ProgressUpdate not found with id: " + progressUpdateId));
+                .orElseThrow(() -> new EntityNotFoundException("ProgressUpdate", progressUpdateId));
 
         // Optionally validate that the user exists in the User microservice.
         // This will throw if the user-service returns an error (4xx/5xx).
