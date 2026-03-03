@@ -53,11 +53,19 @@ export class NotificationService {
   }
 
   /**
-   * Returns the dashboard route + query params for a notification (progress/comment).
-   * Client → track-progress?projectId=X; Freelancer → progress-updates?projectId=X.
+   * Returns the dashboard route + query params for a notification.
+   * TASK_STATUS_UPDATE → project-tasks?projectId=X (client sees task board).
+   * PROGRESS_UPDATE / PROGRESS_COMMENT → track-progress or progress-updates?projectId=X.
    */
   getNotificationRoute(n: NotificationItem, isClient: boolean): { route: string; queryParams: { projectId?: string } } {
     const projectId = n.data?.['projectId'];
+    const type = n.type ?? '';
+
+    if (type === 'TASK_STATUS_UPDATE') {
+      const route = '/dashboard/project-tasks';
+      return projectId ? { route, queryParams: { projectId } } : { route, queryParams: {} };
+    }
+
     const base = isClient ? '/dashboard/track-progress' : '/dashboard/progress-updates';
     if (projectId) {
       return { route: base, queryParams: { projectId } };

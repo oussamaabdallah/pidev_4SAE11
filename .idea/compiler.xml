@@ -37,6 +37,15 @@
         <module name="user" />
         <module name="review" />
       </profile>
+      <profile name="Annotation profile for task" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
+        </processorPath>
+        <module name="task" />
+      </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
@@ -52,6 +61,7 @@
       <module name="notification" options="-parameters" />
       <module name="planning" options="-parameters" />
       <module name="review" options="-parameters" />
+      <module name="task" options="-parameters" />
       <module name="user" options="-parameters" />
     </option>
   </component>

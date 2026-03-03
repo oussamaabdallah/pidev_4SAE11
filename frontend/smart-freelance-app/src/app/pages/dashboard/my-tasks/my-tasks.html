@@ -1,0 +1,187 @@
+<div class="my-tasks-page">
+  <header class="page-header">
+    <div class="page-header__top">
+      <span class="page-badge">Freelancer</span>
+    </div>
+    <h1 class="page-title">My Tasks</h1>
+    <p class="page-subtitle">Tasks assigned to you. Update status as you progress.</p>
+  </header>
+
+  @if (!isFreelancer) {
+    <div class="role-message">This page is for freelancers. Go to Project Tasks if you are a client.</div>
+  } @else {
+    @if (errorMessage) {
+      <div class="error-banner" role="alert">
+        <span class="error-banner__icon" aria-hidden="true"></span>
+        <span>{{ errorMessage }}</span>
+      </div>
+    }
+
+    <section class="tasks-section" aria-labelledby="list-heading">
+      <app-card class="card-list">
+        <div class="toolbar">
+          <h2 id="list-heading" class="section-title">
+            <span class="section-title__icon">✅</span>
+            Your tasks
+          </h2>
+          @if (projectsForAdd.length > 0) {
+            <button type="button" class="btn-add" (click)="openAdd()">Add task</button>
+          }
+        </div>
+
+        @if (loading && tasks.length === 0) {
+          <div class="state-box state-box--loading">
+            <span class="state-box__spinner" aria-hidden="true"></span>
+            <p class="state-box__text">Loading your tasks…</p>
+          </div>
+        } @else if (tasks.length === 0) {
+          <div class="state-box state-box--empty">
+            <p class="state-box__text">No tasks assigned to you yet.</p>
+            <p class="state-box__hint">Add a task or wait for a client to assign you to a project.</p>
+          </div>
+        } @else {
+        <ul class="task-list">
+          @for (t of tasks; track t.id) {
+            <li class="task-item">
+              <div class="task-item__main">
+                <span class="task-item__title">{{ t.title }}</span>
+                <span class="task-item__meta">{{ getProjectTitle(t.projectId) }} · Due {{ formatDueDate(t.dueDate) }}</span>
+              </div>
+              <div class="task-item__status">
+                <span class="badge badge--{{ t.status | lowercase }}">{{ t.status }}</span>
+                @if (t.status !== 'DONE' && t.status !== 'CANCELLED') {
+                  <select #statusSelect (change)="updateStatusFromSelect(t, statusSelect.value)" [disabled]="updatingStatus">
+                    <option value="" disabled>Change status</option>
+                    <option value="IN_PROGRESS">IN_PROGRESS</option>
+                    <option value="IN_REVIEW">IN_REVIEW</option>
+                    <option value="DONE">DONE</option>
+                  </select>
+                }
+                <button type="button" class="btn-action btn-edit" (click)="openEdit(t)">Edit</button>
+                <button type="button" class="btn-action btn-delete" (click)="openDeleteModal(t)">Delete</button>
+              </div>
+            </li>
+          }
+        </ul>
+        }
+      </app-card>
+    </section>
+
+    @if (addModalOpen) {
+      <div class="modal-overlay" (click)="closeAdd()">
+        <div class="modal modal--form" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Add task</h3>
+            <p class="modal-hint">Tasks are assigned to you by default. Set due dates to see them in the Planning calendar.</p>
+          </div>
+          <form [formGroup]="addForm" (ngSubmit)="saveAdd()">
+            <div class="field">
+              <label for="add-projectId">Project</label>
+              <select id="add-projectId" formControlName="projectId">
+                @for (p of projectsForAdd; track p.id) {
+                  <option [ngValue]="p.id">{{ p.title }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="add-title">Title</label>
+              <input id="add-title" formControlName="title" />
+            </div>
+            <div class="field">
+              <label for="add-description">Description (optional)</label>
+              <textarea id="add-description" formControlName="description" rows="3"></textarea>
+            </div>
+            <div class="field">
+              <label for="add-status">Status</label>
+              <select id="add-status" formControlName="status">
+                <option value="TODO">TODO</option>
+                <option value="IN_PROGRESS">IN_PROGRESS</option>
+                <option value="IN_REVIEW">IN_REVIEW</option>
+                <option value="DONE">DONE</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="add-priority">Priority</label>
+              <select id="add-priority" formControlName="priority">
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+                <option value="URGENT">URGENT</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="add-dueDate">Due date (for calendar)</label>
+              <input id="add-dueDate" type="date" formControlName="dueDate" />
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" (click)="closeAdd()" [disabled]="adding">Cancel</button>
+              <button type="submit" class="btn-primary" [disabled]="addForm.invalid || adding">{{ adding ? 'Creating…' : 'Create' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+
+    @if (editingTask) {
+      <div class="modal-overlay" (click)="closeEdit()">
+        <div class="modal modal--form" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Edit task #{{ editingTask.id }}</h3>
+          </div>
+          <form [formGroup]="editForm" (ngSubmit)="saveEdit()">
+            <div class="field">
+              <label for="edit-title">Title</label>
+              <input id="edit-title" formControlName="title" />
+            </div>
+            <div class="field">
+              <label for="edit-description">Description (optional)</label>
+              <textarea id="edit-description" formControlName="description" rows="3"></textarea>
+            </div>
+            <div class="field">
+              <label for="edit-status">Status</label>
+              <select id="edit-status" formControlName="status">
+                <option value="TODO">TODO</option>
+                <option value="IN_PROGRESS">IN_PROGRESS</option>
+                <option value="IN_REVIEW">IN_REVIEW</option>
+                <option value="DONE">DONE</option>
+                <option value="CANCELLED">CANCELLED</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="edit-priority">Priority</label>
+              <select id="edit-priority" formControlName="priority">
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+                <option value="URGENT">URGENT</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="edit-dueDate">Due date</label>
+              <input id="edit-dueDate" type="date" formControlName="dueDate" />
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" (click)="closeEdit()" [disabled]="saving">Cancel</button>
+              <button type="submit" class="btn-primary" [disabled]="editForm.invalid || saving">{{ saving ? 'Saving…' : 'Save' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+
+    @if (taskToDelete) {
+      <div class="modal-overlay" (click)="closeDeleteModal()">
+        <div class="modal modal--confirm" (click)="$event.stopPropagation()">
+          <div class="modal-header modal-header--danger">
+            <h3>Delete task</h3>
+          </div>
+          <p class="modal-message">Are you sure you want to delete <strong>{{ taskToDelete.title }}</strong>? This action cannot be undone.</p>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeDeleteModal()" [disabled]="deleting">Cancel</button>
+            <button type="button" class="btn-danger" (click)="doDelete()" [disabled]="deleting">{{ deleting ? 'Deleting…' : 'Delete' }}</button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

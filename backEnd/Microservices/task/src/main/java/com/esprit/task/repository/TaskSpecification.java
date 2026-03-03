@@ -1,0 +1,57 @@
+package com.esprit.task.repository;
+
+import com.esprit.task.entity.Task;
+import com.esprit.task.entity.TaskPriority;
+import com.esprit.task.entity.TaskStatus;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import org.springframework.data.jpa.domain.Specification;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+public final class TaskSpecification {
+
+    private TaskSpecification() {
+    }
+
+    public static Specification<Task> filtered(
+            Optional<Long> projectId,
+            Optional<Long> contractId,
+            Optional<Long> assigneeId,
+            Optional<TaskStatus> status,
+            Optional<TaskPriority> priority,
+            Optional<Long> parentId,
+            Optional<String> search,
+            Optional<LocalDate> dueDateFrom,
+            Optional<LocalDate> dueDateTo) {
+        return (Root<Task> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            projectId.ifPresent(id -> predicates.add(cb.equal(root.get("projectId"), id)));
+            contractId.ifPresent(id -> predicates.add(cb.equal(root.get("contractId"), id)));
+            assigneeId.ifPresent(id -> predicates.add(cb.equal(root.get("assigneeId"), id)));
+            status.ifPresent(s -> predicates.add(cb.equal(root.get("status"), s)));
+            priority.ifPresent(p -> predicates.add(cb.equal(root.get("priority"), p)));
+            parentId.ifPresent(id -> predicates.add(cb.equal(root.get("parentTaskId"), id)));
+
+            dueDateFrom.ifPresent(from -> predicates.add(cb.greaterThanOrEqualTo(root.get("dueDate"), from)));
+            dueDateTo.ifPresent(to -> predicates.add(cb.lessThanOrEqualTo(root.get("dueDate"), to)));
+
+            search.filter(s -> s != null && !s.isBlank()).ifPresent(keyword -> {
+                String pattern = "%" + keyword.trim().toLowerCase() + "%";
+                Predicate titleLike = cb.like(cb.lower(root.get("title")), pattern);
+                Predicate descLike = cb.and(
+                        cb.isNotNull(root.get("description")),
+                        cb.like(cb.lower(root.get("description")), pattern));
+                predicates.add(cb.or(titleLike, descLike));
+            });
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+}

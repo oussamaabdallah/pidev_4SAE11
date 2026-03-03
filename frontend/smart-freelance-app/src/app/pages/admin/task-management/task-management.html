@@ -1,0 +1,277 @@
+<div class="task-management-page">
+  <header class="page-header">
+    <div class="page-header__top">
+      <span class="page-badge">Admin</span>
+    </div>
+    <h1 class="page-title">Tasks</h1>
+    <p class="page-subtitle">Manage tasks and subtasks across all projects. Tasks with due dates appear in the Planning calendar.</p>
+  </header>
+
+  @if (errorMessage) {
+    <div class="error-banner" role="alert">
+      <span class="error-banner__icon" aria-hidden="true"></span>
+      <span>{{ errorMessage }}</span>
+    </div>
+  }
+
+  <section class="task-section task-section--stats" aria-labelledby="stats-heading">
+    <app-card class="card-stats">
+      <h2 id="stats-heading" class="section-title">
+        <span class="section-title__icon">📊</span>
+        Statistics
+      </h2>
+      <div class="health-strip">
+        @if (healthLoading) {
+          <span class="health health--loading">Checking Task service…</span>
+        } @else if (taskHealth) {
+          <span class="health" [class.health--up]="taskHealth.status === 'UP'" [class.health--degraded]="taskHealth.status !== 'UP'">
+            <span class="health-dot"></span>
+            <span class="health-label">Task service</span>
+            <span class="health-status">{{ taskHealth.status }}</span>
+          </span>
+        } @else {
+          <span class="health health--unknown">Health unavailable</span>
+        }
+      </div>
+      @if (dashboardStats) {
+        <div class="stats-grid">
+          <div class="stat-card stat-card--total"><span class="stat-value">{{ dashboardStats.totalTasks }}</span><span class="stat-label">Total</span></div>
+          <div class="stat-card stat-card--done"><span class="stat-value">{{ dashboardStats.doneCount }}</span><span class="stat-label">Done</span></div>
+          <div class="stat-card stat-card--overdue"><span class="stat-value">{{ dashboardStats.overdueCount }}</span><span class="stat-label">Overdue</span></div>
+          <div class="stat-card stat-card--completion"><span class="stat-value">{{ dashboardStats.completionPercentage != null ? (dashboardStats.completionPercentage | number:'1.1-1') + '%' : '—' }}</span><span class="stat-label">Completion</span></div>
+        </div>
+      }
+    </app-card>
+  </section>
+
+  <section class="task-section task-section--list" aria-labelledby="list-heading">
+    <app-card class="card-list">
+      <div class="list-section-header">
+        <h2 id="list-heading" class="section-title">
+          <span class="section-title__icon">✅</span>
+          Tasks
+        </h2>
+        <div class="toolbar-filters" [formGroup]="filterForm">
+          <select formControlName="projectId" (change)="onFilterChange()">
+            <option [ngValue]="null">All projects</option>
+            @for (p of projectsForAdd; track p.id) {
+              <option [ngValue]="p.id">{{ getProjectLabel(p) }}</option>
+            }
+          </select>
+          <select formControlName="assigneeId" (change)="onFilterChange()">
+            <option [ngValue]="null">All assignees</option>
+            @for (u of freelancersForAdd; track u.id) {
+              <option [ngValue]="u.id">{{ getFreelancerLabel(u) }}</option>
+            }
+          </select>
+          <select formControlName="status" (change)="onFilterChange()">
+            <option [ngValue]="null">All statuses</option>
+            <option value="TODO">TODO</option>
+            <option value="IN_PROGRESS">IN_PROGRESS</option>
+            <option value="IN_REVIEW">IN_REVIEW</option>
+            <option value="DONE">DONE</option>
+            <option value="CANCELLED">CANCELLED</option>
+          </select>
+          <input type="text" class="search-input" formControlName="search" placeholder="Search by title…" (input)="onFilterChange()" />
+          <button type="button" class="btn-secondary" (click)="clearFilters()" [disabled]="loading">Clear</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <span class="toolbar-count">{{ totalElements }} <span class="toolbar-count__label">total</span> · Page {{ page + 1 }} of {{ totalPages || 1 }}</span>
+        <div class="toolbar-actions">
+          <button type="button" class="btn-add" (click)="openAdd()"><span class="btn-add__label">Add task</span></button>
+        </div>
+      </div>
+
+      @if (loading && tasks.length === 0) {
+        <div class="state-box state-box--loading">
+          <span class="state-box__spinner" aria-hidden="true"></span>
+          <p class="state-box__text">Loading tasks…</p>
+        </div>
+      } @else if (tasks.length === 0) {
+        <div class="state-box state-box--empty">
+          <p class="state-box__text">No tasks found.</p>
+          <p class="state-box__hint">Use the filters above or add a new task.</p>
+        </div>
+      } @else {
+        <div class="table-wrap">
+          <table class="data-table" role="grid">
+            <thead>
+              <tr>
+                <th scope="col" class="col-id">ID</th>
+                <th scope="col" class="col-title">Title</th>
+                <th scope="col" class="col-project">Project</th>
+                <th scope="col" class="col-status">Status</th>
+                <th scope="col" class="col-assignee">Assignee</th>
+                <th scope="col" class="col-due">Due date</th>
+                <th scope="col" class="col-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (t of tasks; track t.id) {
+                <tr class="data-row">
+                  <td class="col-id"><span class="cell-id">{{ t.id }}</span></td>
+                  <td class="col-title"><span class="cell-title">{{ t.title }}</span></td>
+                  <td class="col-project"><span class="cell-meta">{{ getProjectTitle(t.projectId) }} <em>(#{{ t.projectId }})</em></span></td>
+                  <td class="col-status"><span class="badge badge--{{ t.status | lowercase }}">{{ t.status }}</span></td>
+                  <td class="col-assignee"><span class="cell-meta">{{ getAssigneeName(t.assigneeId) }}</span></td>
+                  <td class="col-due"><span class="cell-date">{{ formatDueDate(t.dueDate) }}</span></td>
+                  <td class="col-actions">
+                    <div class="action-buttons">
+                      <button type="button" class="btn-action btn-edit" (click)="openEdit(t)">Edit</button>
+                      <button type="button" class="btn-action btn-delete" (click)="openDeleteModal(t)">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (totalPages > 1) {
+          <nav class="pagination" aria-label="Tasks pagination">
+            <button type="button" class="btn-pagination btn-pagination--nav" (click)="goToPage(0)" [disabled]="page === 0 || loading" aria-label="First page">First</button>
+            <button type="button" class="btn-pagination btn-pagination--nav" (click)="goToPage(page - 1)" [disabled]="page === 0 || loading" aria-label="Previous page">Prev</button>
+            <span class="pagination-info" aria-current="page">Page {{ page + 1 }} of {{ totalPages }}</span>
+            <button type="button" class="btn-pagination btn-pagination--nav" (click)="goToPage(page + 1)" [disabled]="page >= totalPages - 1 || loading" aria-label="Next page">Next</button>
+            <button type="button" class="btn-pagination btn-pagination--nav" (click)="goToPage(totalPages - 1)" [disabled]="page >= totalPages - 1 || loading" aria-label="Last page">Last</button>
+          </nav>
+        }
+      }
+    </app-card>
+  </section>
+
+  @if (addModalOpen) {
+    <div class="modal-overlay" (click)="closeAdd()">
+      <div class="modal modal--form" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Add task</h3>
+          <p class="modal-hint">Tasks with due dates appear in the Planning calendar.</p>
+        </div>
+        <form [formGroup]="addForm" (ngSubmit)="saveAdd()">
+          <div class="field">
+            <label>Project</label>
+            <select formControlName="projectId">
+              <option [ngValue]="null">Select…</option>
+              @for (p of projectsForAdd; track p.id) {
+                <option [ngValue]="p.id">{{ getProjectLabel(p) }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label>Title</label>
+            <input formControlName="title" />
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <textarea formControlName="description" rows="2"></textarea>
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <select formControlName="status">
+              <option value="TODO">TODO</option>
+              <option value="IN_PROGRESS">IN_PROGRESS</option>
+              <option value="IN_REVIEW">IN_REVIEW</option>
+              <option value="DONE">DONE</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Priority</label>
+            <select formControlName="priority">
+              <option value="LOW">LOW</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="HIGH">HIGH</option>
+              <option value="URGENT">URGENT</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Assignee</label>
+            <select formControlName="assigneeId">
+              <option [ngValue]="null">Unassigned</option>
+              @for (u of freelancersForAdd; track u.id) {
+                <option [ngValue]="u.id">{{ getFreelancerLabel(u) }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label>Due date (for calendar)</label>
+            <input type="date" formControlName="dueDate" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeAdd()" [disabled]="adding">Cancel</button>
+            <button type="submit" class="btn-primary" [disabled]="addForm.invalid || adding">{{ adding ? 'Creating…' : 'Create' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  @if (editingTask) {
+    <div class="modal-overlay" (click)="closeEdit()">
+      <div class="modal modal--form" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Edit task #{{ editingTask.id }}</h3>
+        </div>
+        <form [formGroup]="editForm" (ngSubmit)="saveEdit()">
+          <div class="field">
+            <label>Project</label>
+            <select formControlName="projectId">
+              @for (p of projectsForAdd; track p.id) {
+                <option [ngValue]="p.id">{{ getProjectLabel(p) }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label>Title</label>
+            <input formControlName="title" />
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <textarea formControlName="description" rows="2"></textarea>
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <select formControlName="status">
+              <option value="TODO">TODO</option>
+              <option value="IN_PROGRESS">IN_PROGRESS</option>
+              <option value="IN_REVIEW">IN_REVIEW</option>
+              <option value="DONE">DONE</option>
+              <option value="CANCELLED">CANCELLED</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Assignee</label>
+            <select formControlName="assigneeId">
+              <option [ngValue]="null">Unassigned</option>
+              @for (u of freelancersForAdd; track u.id) {
+                <option [ngValue]="u.id">{{ getFreelancerLabel(u) }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label>Due date</label>
+            <input type="date" formControlName="dueDate" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeEdit()" [disabled]="saving">Cancel</button>
+            <button type="submit" class="btn-primary" [disabled]="editForm.invalid || saving">{{ saving ? 'Saving…' : 'Save' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  @if (taskToDelete) {
+    <div class="modal-overlay" (click)="closeDeleteModal()">
+      <div class="modal modal--confirm" (click)="$event.stopPropagation()">
+        <div class="modal-header modal-header--danger">
+          <h3>Delete task</h3>
+        </div>
+        <p class="modal-message">Are you sure you want to delete <strong>{{ taskToDelete.title }}</strong>? This action cannot be undone.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeDeleteModal()" [disabled]="deleting">Cancel</button>
+          <button type="button" class="btn-danger" (click)="doDelete()" [disabled]="deleting">{{ deleting ? 'Deleting…' : 'Delete' }}</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,10 +1,12 @@
 package com.esprit.planning.service;
 
 import com.esprit.planning.client.ProjectClient;
+import com.esprit.planning.client.TaskClient;
 import com.esprit.planning.dto.CalendarEventDto;
 import com.esprit.planning.dto.ProjectDto;
 import com.esprit.planning.entity.ProgressUpdate;
 import com.esprit.planning.repository.ProgressUpdateRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,8 +35,16 @@ class CalendarEventServiceTest {
     @Mock
     private ProjectClient projectClient;
 
+    @Mock
+    private TaskClient taskClient;
+
     @InjectMocks
     private CalendarEventService calendarEventService;
+
+    @BeforeEach
+    void setUp() {
+        when(taskClient.getCalendarEvents(any(), any(), any())).thenReturn(List.of());
+    }
 
     @Test
     void listEventsFromDb_withoutUserId_returnsEventsFromUpdatesAndProjects() {

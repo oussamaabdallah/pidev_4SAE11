@@ -1,0 +1,130 @@
+<div class="project-tasks-page">
+  <header class="page-header">
+    <div class="page-header__top">
+      <span class="page-badge">Client</span>
+    </div>
+    <h1 class="page-title">Project Tasks</h1>
+    <p class="page-subtitle">View tasks for your projects. Your freelancer manages and completes them. Refresh to see updates.</p>
+  </header>
+
+  @if (!isClient) {
+    <div class="role-message">This page is for clients. Go to My Tasks if you are a freelancer.</div>
+  } @else {
+    @if (errorMessage) {
+      <div class="error-banner" role="alert">
+        <span class="error-banner__icon" aria-hidden="true"></span>
+        <span>{{ errorMessage }}</span>
+      </div>
+    }
+
+    @if (myProjects.length === 0) {
+      <div class="state-box state-box--empty">
+        <p class="state-box__text">You have no projects yet.</p>
+        <p class="state-box__hint">Create a project first to add tasks.</p>
+      </div>
+    } @else {
+      <div class="project-selector" [formGroup]="projectForm">
+        <label for="project-select">Project</label>
+        <select id="project-select" formControlName="projectId" (change)="onProjectChange()">
+          @for (p of myProjects; track p.id) {
+            <option [ngValue]="p.id">{{ getProjectTitle(p) }}</option>
+          }
+        </select>
+      </div>
+
+      @if (selectedProjectId && tasks.length > 0) {
+        <div class="progress-bar-wrap" aria-live="polite">
+          <div class="progress-bar">
+            <div class="progress-bar__fill" [style.width.%]="completionPercentage"></div>
+          </div>
+          <p class="progress-bar__label">{{ doneCount }} of {{ tasks.length }} tasks completed ({{ completionPercentage | number:'1.0-0' }}%)</p>
+        </div>
+
+        <section class="stats-section" aria-labelledby="stats-heading">
+          <h2 id="stats-heading" class="stats-section__title">
+            <span class="stats-section__icon">📊</span>
+            Task Statistics
+          </h2>
+
+          <div class="stats-cards">
+            <div class="stat-card">
+              <span class="stat-card__value">{{ tasks.length }}</span>
+              <span class="stat-card__label">Total</span>
+            </div>
+            <div class="stat-card stat-card--done">
+              <span class="stat-card__value">{{ doneCount }}</span>
+              <span class="stat-card__label">Done</span>
+            </div>
+            <div class="stat-card stat-card--progress">
+              <span class="stat-card__value">{{ inProgressCount }}</span>
+              <span class="stat-card__label">In Progress</span>
+            </div>
+            <div class="stat-card stat-card--overdue" [class.stat-card--alert]="overdueCount > 0">
+              <span class="stat-card__value">{{ overdueCount }}</span>
+              <span class="stat-card__label">Overdue</span>
+            </div>
+          </div>
+
+          <div class="stats-charts">
+            <app-card class="chart-card">
+              <h3 class="chart-card__title">Status Breakdown</h3>
+              <div class="chart-wrapper chart-wrapper--doughnut">
+                <canvas baseChart
+                  [type]="'doughnut'"
+                  [data]="statusChartData"
+                  [options]="statusChartOptions">
+                </canvas>
+              </div>
+            </app-card>
+            <app-card class="chart-card">
+              <h3 class="chart-card__title">Priority Distribution</h3>
+              <div class="chart-wrapper chart-wrapper--bar">
+                <canvas baseChart
+                  [type]="'bar'"
+                  [data]="priorityChartData"
+                  [options]="priorityChartOptions">
+                </canvas>
+              </div>
+            </app-card>
+          </div>
+        </section>
+      }
+
+      <section class="tasks-section" aria-labelledby="list-heading">
+        <app-card class="card-list">
+          <div class="toolbar">
+            <h2 id="list-heading" class="section-title">
+              <span class="section-title__icon">✅</span>
+              Tasks
+            </h2>
+            <button type="button" class="btn-refresh" (click)="loadTasks()" [disabled]="loading" title="Refresh to see latest updates">Refresh</button>
+          </div>
+
+          @if (loading && tasks.length === 0) {
+            <div class="state-box state-box--loading">
+              <span class="state-box__spinner" aria-hidden="true"></span>
+              <p class="state-box__text">Loading tasks…</p>
+            </div>
+          } @else if (tasks.length === 0) {
+            <div class="state-box state-box--empty">
+              <p class="state-box__text">No tasks for this project yet.</p>
+              <p class="state-box__hint">Tasks will appear when your freelancer adds them.</p>
+            </div>
+          } @else {
+          <ul class="task-list">
+            @for (t of tasks; track t.id) {
+              <li class="task-item">
+                <div class="task-item__main">
+                  <span class="task-item__title">{{ t.title }}</span>
+                  <span class="task-item__meta">Assignee: {{ getAssigneeName(t.assigneeId) }} · Due {{ formatDueDate(t.dueDate) }}</span>
+                </div>
+                <span class="badge badge--{{ t.status | lowercase }}">{{ t.status }}</span>
+              </li>
+            }
+          </ul>
+          }
+        </app-card>
+      </section>
+    }
+  }
+</div>

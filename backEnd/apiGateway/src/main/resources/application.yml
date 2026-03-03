@@ -104,3 +104,11 @@ spring:
             - Path=/notification/**
           filters:
             - StripPrefix=1
+
+        # Task: direct URL (port 8091)
+        - id: task
+          uri: http://localhost:8091
+          predicates:
+            - Path=/task/**
+          filters:
+            - StripPrefix=1

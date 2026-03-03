@@ -87,6 +87,7 @@ A microservices-based platform connecting freelancers and clients for project co
 | Review | 8085 | `reviewdb` |
 | Portfolio | 8086 | `portfolio_db` |
 | Notification | 8087 | Firebase |
+| Task | 8091 | `taskdb` |
 
 ### Startup Order
 
@@ -96,7 +97,7 @@ A microservices-based platform connecting freelancers and clients for project co
 4. **API Gateway** → `backEnd/apiGateway`  
 5. **Keycloak** (standalone) — [see Keycloak setup](backEnd/KeyCloak/README.md)  
 6. **Keycloak Auth** → `backEnd/KeyCloak`  
-7. **Microservices** — User, Project, Offer, Contract, Portfolio, Review, Planning, Notification  
+7. **Microservices** — User, Project, Offer, Contract, Portfolio, Review, Planning, Notification, Task  
 
 ### Run the Backend
 
@@ -140,6 +141,7 @@ Swagger UI is available via the Gateway for services that expose it:
 │       ├── Notification/    # Push notifications (Firebase)
 │       ├── Offer/           # Offers & applications
 │       ├── planning/        # Calendar, GitHub sync
+│       ├── task/            # Tasks, subtasks, calendar integration
 │       ├── Portfolio/       # Portfolio, skills, AI verification
 │       ├── Project/         # Project management
 │       ├── review/          # Reviews & ratings

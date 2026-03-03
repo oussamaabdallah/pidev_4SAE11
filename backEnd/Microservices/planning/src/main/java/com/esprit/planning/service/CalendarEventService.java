@@ -1,6 +1,7 @@
 package com.esprit.planning.service;
 
 import com.esprit.planning.client.ProjectClient;
+import com.esprit.planning.client.TaskClient;
 import com.esprit.planning.dto.CalendarEventDto;
 import com.esprit.planning.dto.ProjectDto;
 import com.esprit.planning.entity.ProgressUpdate;
@@ -10,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -29,6 +32,7 @@ public class CalendarEventService {
 
     private final ProgressUpdateRepository progressUpdateRepository;
     private final ProjectClient projectClient;
+    private final TaskClient taskClient;
 
     /**
      * Returns calendar events from our own data (no user filter). Use {@link #listEventsFromDb(LocalDateTime, LocalDateTime, Long, String)}
@@ -91,6 +95,18 @@ public class CalendarEventService {
             }
         } catch (Exception e) {
             log.warn("Failed to load project-deadline calendar events (Project service may be down): {}", e.getMessage());
+        }
+
+        // Task deadlines in range (from Task microservice)
+        try {
+            String timeMinStr = timeMin.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_INSTANT);
+            String timeMaxStr = timeMax.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_INSTANT);
+            List<CalendarEventDto> taskEvents = taskClient.getCalendarEvents(timeMinStr, timeMaxStr, userId);
+            if (taskEvents != null) {
+                events.addAll(taskEvents);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to load task-deadline calendar events (Task service may be down): {}", e.getMessage());
         }
 
         events.sort(Comparator.comparing(CalendarEventDto::getStart, Comparator.nullsLast(Comparator.naturalOrder())));
