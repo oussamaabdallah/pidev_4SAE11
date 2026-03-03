@@ -97,4 +97,32 @@ class TaskCommentServiceTest {
 
         verify(taskCommentRepository).delete(c);
     }
+
+    @Test
+    void findAll_returnsPaginated() {
+        TaskComment c = comment(1L, 1L);
+        org.springframework.data.domain.Page<TaskComment> page =
+                new PageImpl<>(List.of(c), PageRequest.of(0, 20), 1);
+        when(taskCommentRepository.findAll(any())).thenReturn(page);
+
+        org.springframework.data.domain.Page<TaskComment> result =
+                taskCommentService.findAll(PageRequest.of(0, 20));
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getMessage()).isEqualTo("Test");
+    }
+
+    @Test
+    void update_modifiesMessageAndSaves() {
+        TaskComment existing = comment(1L, 1L);
+        TaskComment updated = comment(1L, 1L);
+        updated.setMessage("Updated message");
+        when(taskCommentRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(taskCommentRepository.save(any())).thenReturn(updated);
+
+        TaskComment result = taskCommentService.update(1L, updated);
+
+        assertThat(result.getMessage()).isEqualTo("Updated message");
+        verify(taskCommentRepository).save(any());
+    }
 }

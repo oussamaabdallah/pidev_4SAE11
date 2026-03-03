@@ -20,7 +20,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
+import com.esprit.task.dto.ProjectDto;
+import com.esprit.task.dto.TaskCalendarEventDto;
+
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -315,5 +319,126 @@ class TaskServiceTest {
 
         verify(taskCommentRepository).delete(c);
         verify(taskRepository).delete(t);
+    }
+
+    @Test
+    void getCalendarEvents_withoutUserId_returnsEventsFromRepo() {
+        Task t = task(1L);
+        t.setDueDate(LocalDate.now().plusDays(1));
+        LocalDateTime min = LocalDateTime.now();
+        LocalDateTime max = min.plusMonths(1);
+        when(taskRepository.findByDueDateBetween(min.toLocalDate(), max.toLocalDate()))
+                .thenReturn(List.of(t));
+
+        List<TaskCalendarEventDto> result = taskService.getCalendarEvents(min, max, Optional.empty());
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo("task-1");
+        assertThat(result.get(0).getSummary()).contains("Task 1");
+    }
+
+    @Test
+    void getCalendarEvents_withUserId_returnsMergedAssigneeAndProjectTasks() {
+        Task t1 = task(1L);
+        t1.setAssigneeId(5L);
+        t1.setDueDate(LocalDate.now().plusDays(1));
+        Task t2 = task(2L);
+        t2.setProjectId(10L);
+        t2.setDueDate(LocalDate.now().plusDays(2));
+        LocalDateTime min = LocalDateTime.now();
+        LocalDateTime max = min.plusMonths(1);
+        LocalDate start = min.toLocalDate();
+        LocalDate end = max.toLocalDate();
+
+        when(projectClient.getProjectsByClientId(5L)).thenReturn(
+                List.of(new ProjectDto(10L, 5L, "P", null)));
+        when(taskRepository.findByDueDateBetweenAndAssigneeId(start, end, 5L)).thenReturn(List.of(t1));
+        when(taskRepository.findByDueDateBetween(start, end)).thenReturn(List.of(t1, t2));
+
+        List<TaskCalendarEventDto> result = taskService.getCalendarEvents(min, max, Optional.of(5L));
+
+        assertThat(result).hasSize(2);
+    }
+
+    @Test
+    void getCalendarEvents_withUserId_whenProjectClientThrows_continuesWithoutProjectIds() {
+        Task t = task(1L);
+        t.setAssigneeId(5L);
+        t.setDueDate(LocalDate.now().plusDays(1));
+        LocalDateTime min = LocalDateTime.now();
+        LocalDateTime max = min.plusMonths(1);
+        LocalDate start = min.toLocalDate();
+        LocalDate end = max.toLocalDate();
+
+        when(projectClient.getProjectsByClientId(5L)).thenThrow(new RuntimeException("Network error"));
+        when(taskRepository.findByDueDateBetweenAndAssigneeId(start, end, 5L)).thenReturn(List.of(t));
+
+        List<TaskCalendarEventDto> result = taskService.getCalendarEvents(min, max, Optional.of(5L));
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void getOverdueTasks_withProjectId_only_returnsFiltered() {
+        Task t = task(1L);
+        LocalDate today = LocalDate.now();
+        when(taskRepository.findOverdueTasksByProject(1L, today)).thenReturn(List.of(t));
+
+        List<Task> result = taskService.getOverdueTasks(Optional.of(1L), Optional.empty());
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void getOverdueTasks_withAssigneeId_only_returnsFiltered() {
+        Task t = task(1L);
+        t.setAssigneeId(10L);
+        LocalDate today = LocalDate.now();
+        when(taskRepository.findOverdueTasksByAssignee(10L, today)).thenReturn(List.of(t));
+
+        List<Task> result = taskService.getOverdueTasks(Optional.empty(), Optional.of(10L));
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void getOverdueTasks_withBothProjectAndAssignee_filtersByBoth() {
+        Task t = task(1L);
+        t.setAssigneeId(10L);
+        LocalDate today = LocalDate.now();
+        when(taskRepository.findOverdueTasksByProject(1L, today)).thenReturn(List.of(t));
+
+        List<Task> result = taskService.getOverdueTasks(Optional.of(1L), Optional.of(10L));
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void getStatsByProject_whenTotalZero_returnsZeroCompletion() {
+        when(taskRepository.countByProjectId(1L)).thenReturn(0L);
+        when(taskRepository.findOverdueTasksByProject(1L, LocalDate.now())).thenReturn(List.of());
+
+        TaskStatsDto result = taskService.getStatsByProject(1L);
+
+        assertThat(result.getTotalTasks()).isEqualTo(0);
+        assertThat(result.getCompletionPercentage()).isEqualTo(0.0);
+    }
+
+    @Test
+    void deleteById_withSubtasks_deletesRecursively() {
+        Task parent = task(1L);
+        Task sub = task(2L);
+        sub.setParentTaskId(1L);
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(parent));
+        when(taskRepository.findByParentTaskId(1L)).thenReturn(List.of(sub));
+        when(taskRepository.findById(2L)).thenReturn(Optional.of(sub));
+        when(taskRepository.findByParentTaskId(2L)).thenReturn(List.of());
+        when(taskCommentRepository.findByTaskIdOrderByCreatedAtAsc(1L)).thenReturn(List.of());
+        when(taskCommentRepository.findByTaskIdOrderByCreatedAtAsc(2L)).thenReturn(List.of());
+
+        taskService.deleteById(1L);
+
+        verify(taskRepository).delete(sub);
+        verify(taskRepository).delete(parent);
     }
 }

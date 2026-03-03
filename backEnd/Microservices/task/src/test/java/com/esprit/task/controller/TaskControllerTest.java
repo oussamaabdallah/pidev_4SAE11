@@ -22,7 +22,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -171,5 +172,103 @@ class TaskControllerTest {
         mockMvc.perform(delete("/api/tasks/1"))
                 .andExpect(status().isNoContent());
         verify(taskService).deleteById(1L);
+    }
+
+    @Test
+    void getByContractId_returnsList() throws Exception {
+        Task t = task(1L);
+        when(taskService.findByContractId(1L)).thenReturn(List.of(t));
+
+        mockMvc.perform(get("/api/tasks/contract/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1));
+    }
+
+    @Test
+    void getByAssigneeId_returnsList() throws Exception {
+        Task t = task(1L);
+        when(taskService.findByAssigneeId(10L)).thenReturn(List.of(t));
+
+        mockMvc.perform(get("/api/tasks/assignee/10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1));
+    }
+
+    @Test
+    void patchAssignee_returns200() throws Exception {
+        Task t = task(1L);
+        when(taskService.patchAssignee(1L, 10L)).thenReturn(t);
+
+        mockMvc.perform(patch("/api/tasks/1/assignee").param("assigneeId", "10"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void reorder_returns200() throws Exception {
+        mockMvc.perform(post("/api/tasks/reorder")
+                        .contentType(APPLICATION_JSON)
+                        .content("[1, 2, 3]"))
+                .andExpect(status().isOk());
+        verify(taskService).reorder(any());
+    }
+
+    @Test
+    void getFiltered_withSortParam_invokesService() throws Exception {
+        Page<Task> page = new PageImpl<>(List.of(task(1L)), PageRequest.of(0, 20), 1);
+        when(taskService.findAllFiltered(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(page);
+
+        mockMvc.perform(get("/api/tasks")
+                        .param("page", "0")
+                        .param("size", "20")
+                        .param("sort", "dueDate,desc"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getFiltered_withAllFilters_invokesService() throws Exception {
+        Page<Task> page = new PageImpl<>(List.of(), PageRequest.of(0, 20), 0);
+        when(taskService.findAllFiltered(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(page);
+
+        mockMvc.perform(get("/api/tasks")
+                        .param("projectId", "1")
+                        .param("contractId", "2")
+                        .param("assigneeId", "10")
+                        .param("status", "IN_PROGRESS")
+                        .param("priority", "HIGH")
+                        .param("search", "test")
+                        .param("dueDateFrom", "2024-01-01")
+                        .param("dueDateTo", "2024-12-31"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getCalendarEvents_withParams_invokesService() throws Exception {
+        TaskCalendarEventDto evt = TaskCalendarEventDto.builder()
+                .id("task-1")
+                .summary("Test")
+                .start(LocalDateTime.now())
+                .end(LocalDateTime.now().plusHours(1))
+                .build();
+        when(taskService.getCalendarEvents(any(), any(), any())).thenReturn(List.of(evt));
+
+        mockMvc.perform(get("/api/tasks/calendar-events")
+                        .param("timeMin", "2024-01-01T00:00:00Z")
+                        .param("timeMax", "2024-12-31T23:59:59Z")
+                        .param("userId", "5"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void create_withFullRequest_returns201() throws Exception {
+        Task t = task(1L);
+        when(taskService.create(any())).thenReturn(t);
+
+        String body = """
+                {"projectId":1,"contractId":2,"title":"Task","description":"Desc","status":"TODO","priority":"HIGH","assigneeId":10,"dueDate":"2024-06-15","orderIndex":0,"parentTaskId":null}
+                """;
+        mockMvc.perform(post("/api/tasks").contentType(APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated());
     }
 }

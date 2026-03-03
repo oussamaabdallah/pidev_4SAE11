@@ -122,4 +122,16 @@ class TaskNotificationServiceTest {
         verify(notificationClient).create(captor.capture());
         assertThat(captor.getValue().getBody()).contains("Task #1");
     }
+
+    @Test
+    void notifyTaskStatusUpdate_whenNotificationClientThrows_doesNotPropagate() {
+        Task t = task(1L);
+        ProjectDto project = new ProjectDto(1L, 100L, "Project A", null);
+        when(projectClient.getProjectById(1L)).thenReturn(project);
+        when(notificationClient.create(any())).thenThrow(new RuntimeException("Service unavailable"));
+
+        taskNotificationService.notifyTaskStatusUpdate(t);
+
+        // Should not throw - failures are logged and swallowed
+    }
 }
