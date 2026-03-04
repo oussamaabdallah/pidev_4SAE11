@@ -5,7 +5,7 @@ import { ProjectService, Project } from '../../../core/services/project.service'
 import { AuthService } from '../../../core/services/auth.service';
 import { UserService } from '../../../core/services/user.service';
 import { Router } from '@angular/router';
-import { PortfolioService, Skill } from '../../../core/services/portfolio.service';
+import { PortfolioService, Skill, Domain } from '../../../core/services/portfolio.service';
 
 @Component({
   selector: 'app-add-project',
@@ -96,7 +96,7 @@ export class AddProject implements OnInit {
 
     const skill: Skill = {
       name: this.newSkillName.trim(),
-      domain: this.newSkillDomain.trim(),
+      domains: [this.newSkillDomain.trim() as Domain],
       description: 'Added from project form',
       userId: 2,  // not needed for project creation
       verified: false,    // default
@@ -157,7 +157,7 @@ export class AddProject implements OnInit {
 
     const skillToCreate: Skill = {
       name: this.newSkillName.trim(),
-      domain: 'General',
+      domains: ['OTHER'],
       description: 'Created from project form'
     };
 

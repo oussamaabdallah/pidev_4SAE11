@@ -59,7 +59,7 @@ public class ProjectController {
     }
 
     @GetMapping("/recommended")
-    public List<Project> getRecommendedProjects(
+    public List<ProjectResponse> getRecommendedProjects(
             @RequestParam Long userId) {
 
         return projectService.getRecommendedProjects(userId);

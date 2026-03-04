@@ -10,9 +10,7 @@ import tn.esprit.project.Dto.response.ProjectResponse;
 import tn.esprit.project.Dto.Skills;
 import tn.esprit.project.Entities.Enums.ProjectStatus;
 
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -82,6 +80,7 @@ public class ProjectService implements IProjectService{
         response.setDeadline(project.getDeadline());
         response.setStatus(project.getStatus().name());
         response.setCategory(project.getCategory());
+        response.setSkillIds(project.getSkillIds() != null ? project.getSkillIds() : List.of());
         response.setSkills(skills);
 
         return response;
@@ -107,6 +106,7 @@ public class ProjectService implements IProjectService{
             response.setDeadline(project.getDeadline());
             response.setStatus(project.getStatus().name());
             response.setCategory(project.getCategory());
+            response.setSkillIds(project.getSkillIds() != null ? project.getSkillIds() : List.of());
             response.setSkills(skills);
 
             return response;
@@ -119,45 +119,91 @@ public class ProjectService implements IProjectService{
     }
 
     @Override
-    public List<Project> getRecommendedProjects(Long freelancerId) {
-        // 1️⃣ Fetch freelancer skills from PORTFOLIO microservice
-        List<Skills> freelancerSkills = skillClient.getSkillsByUserId(freelancerId);
+    public List<ProjectResponse> getRecommendedProjects(Long freelancerId) {
+        // 1️⃣ Fetch freelancer skills from PORTFOLIO microservice (with fallback)
+        List<Skills> freelancerSkills;
+        try {
+            freelancerSkills = skillClient.getSkillsByUserId(freelancerId);
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(ProjectService.class)
+                    .warn("Failed to fetch skills from Portfolio for userId={}: {} — returning no recommendations",
+                            freelancerId, e.getMessage());
+            return List.of();
+        }
 
         if (freelancerSkills == null || freelancerSkills.isEmpty()) {
             return List.of(); // No skills → no recommendations
         }
 
-        // 2️⃣ Extract skill IDs
-        List<Long> freelancerSkillIds = freelancerSkills.stream()
-                .map(Skills::getId)
+        // 2️⃣ Extract freelancer skill names (normalized for matching)
+        // Match by NAME not ID: projects use skillIds from getAllSkills(), freelancers have
+        // their own skill rows with different IDs. Same skill name = match.
+        Set<String> freelancerSkillNames = freelancerSkills.stream()
+                .map(s -> s.getName())
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .filter(n -> !n.isEmpty())
+                .collect(Collectors.toSet());
+
+        if (freelancerSkillNames.isEmpty()) {
+            return List.of();
+        }
+
+        // 3️⃣ Get matching open projects (by name overlap) and convert to ProjectResponse
+        List<Project> matchingProjects = getRecommendedProjectsBySkillNames(freelancerSkillNames);
+        return matchingProjects.stream()
+                .map(p -> getProjectResponse(p.getId()))
+                .limit(6)
                 .toList();
-
-        // 3️⃣ Use existing recommendation logic
-        return getRecommendedProjects(freelancerSkillIds);
     }
-
-
 
     // ------------------- Recommandation -------------------
 
-    public List<Project> getRecommendedProjects(List<Long> freelancerSkillIds) {
+    /** Returns projects matching freelancer skills by skill NAME overlap (not ID). */
+    private List<Project> getRecommendedProjectsBySkillNames(Set<String> freelancerSkillNames) {
         List<Project> openProjects = projectRepository.findByStatus(ProjectStatus.OPEN);
-
-        return openProjects.stream()
+        List<Project> withSkills = openProjects.stream()
                 .filter(p -> p.getSkillIds() != null && !p.getSkillIds().isEmpty())
-                .map(p -> new ProjectScore(p, calculateScore(p, freelancerSkillIds)))
+                .toList();
+
+        if (withSkills.isEmpty()) return List.of();
+
+        // Batch-load all project skill names in one Feign call
+        Set<Long> allSkillIds = withSkills.stream()
+                .flatMap(p -> p.getSkillIds().stream())
+                .collect(Collectors.toSet());
+        Map<Long, String> idToName = resolveSkillNames(new ArrayList<>(allSkillIds));
+
+        return withSkills.stream()
+                .map(p -> new ProjectScore(p, calculateScoreByName(p, freelancerSkillNames, idToName)))
                 .filter(ps -> ps.getScore() > 0)
                 .sorted((a, b) -> Integer.compare(b.getScore(), a.getScore()))
-                .limit(3)
+                .limit(6)
                 .map(ProjectScore::getProject)
                 .collect(Collectors.toList());
     }
 
-    private int calculateScore(Project project, List<Long> freelancerSkillIds) {
+    private Map<Long, String> resolveSkillNames(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return Map.of();
+        try {
+            List<Skills> skills = skillClient.getSkillsByIds(ids);
+            if (skills == null) return Map.of();
+            return skills.stream()
+                    .filter(s -> s.getId() != null && s.getName() != null)
+                    .collect(Collectors.toMap(Skills::getId, s -> s.getName().trim().toLowerCase(), (a, b) -> a));
+        } catch (Exception e) {
+            return Map.of();
+        }
+    }
+
+    /** Score = number of project skill names that match freelancer skill names (case-insensitive). */
+    private int calculateScoreByName(Project project, Set<String> freelancerSkillNames, Map<Long, String> idToName) {
         if (project.getSkillIds() == null || project.getSkillIds().isEmpty()) return 0;
-        return (int) project.getSkillIds()
-                .stream()
-                .filter(freelancerSkillIds::contains)
+        return (int) project.getSkillIds().stream()
+                .map(idToName::get)
+                .filter(Objects::nonNull)
+                .filter(freelancerSkillNames::contains)
                 .count();
     }
 

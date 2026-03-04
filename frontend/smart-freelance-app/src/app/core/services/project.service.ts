@@ -19,6 +19,7 @@ export interface Project {
   deadline?: string;
   status?: string;
   category?: string;
+  skillIds?: number[];
   skills?: Skill[];
   createdAt?: string;
   updatedAt?: string;

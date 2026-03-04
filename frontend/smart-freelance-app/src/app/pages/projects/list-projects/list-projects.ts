@@ -10,7 +10,7 @@ import { catchError, map, filter } from 'rxjs/operators';
 import { FormsModule } from '@angular/forms';
 import { Chart, ChartData, ChartOptions, registerables } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
-import { ProjectApplicationService } from '../../../core/services/project-application.service';
+import { ProjectApplicationService, ProjectApplicationStats } from '../../../core/services/project-application.service';
 
 
 const AUTO_REFRESH_INTERVAL_MS = 60_000;
@@ -62,34 +62,53 @@ export class ListProjects implements OnInit, OnDestroy {
     }
   };
 
-  // 🔥 Applications per Project (BAR CHART)
-  applicationsChartData = {
-    labels: [] as string[],
+  // 🔥 Applications per Project (HORIZONTAL BAR CHART)
+  applicationsChartData: ChartData<'bar'> = {
+    labels: [],
     datasets: [{
       label: 'Applications',
-      data: [] as number[],
-      backgroundColor: '#2563EB',
-      borderRadius: 6
+      data: [],
+      backgroundColor: [],
+      borderRadius: 6,
+      barThickness: 20,
+      maxBarThickness: 28
     }]
   };
 
   applicationsChartOptions: ChartOptions<'bar'> = {
+    indexAxis: 'y',
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: true,
-        position: 'top' as const   // ✅ FIX HERE
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          title: (items) => {
+            const idx = items[0]?.dataIndex ?? 0;
+            const limit = this.applicationsChartLimit === 9999 ? this.applicationStats.length : this.applicationsChartLimit;
+            const stat = this.applicationStats.slice(0, limit)[idx];
+            return stat?.projectTitle ?? this.applicationsChartData.labels?.[idx] ?? '';
+          },
+          label: (ctx) => `${ctx.raw} application${Number(ctx.raw) !== 1 ? 's' : ''}`
+        }
       }
     },
     scales: {
-      y: {
+      x: {
         beginAtZero: true,
-        ticks: {
-          precision: 0
-        }
+        ticks: { precision: 0, stepSize: 1 },
+        grid: { color: 'rgba(0,0,0,0.06)' }
+      },
+      y: {
+        grid: { display: false },
+        ticks: { font: { size: 11 }, maxRotation: 0, autoSkip: false }
       }
     }
   };
+
+  applicationStats: ProjectApplicationStats[] = [];
+  applicationsChartLimit = 15;
+  applicationsChartLimitOptions = [10, 15, 20, 30, 50, 9999];
 
   canManageProjects = false;
 
@@ -243,22 +262,22 @@ export class ListProjects implements OnInit, OnDestroy {
             this.cdr.detectChanges();
           });
 
-          // 🔥 Applications per Project (BAR)
+          // 🔥 Applications per Project (HORIZONTAL BAR)
           this.applicationService.getProjectApplicationStatistics()
             .subscribe(stats => {
-
-              if (!stats) return;
-
-              this.applicationsChartData = {
-                labels: stats.map(s => s.projectTitle),
-                datasets: [{
-                  label: 'Number of Applications',
-                  data: stats.map(s => s.applicationsCount),
-                  backgroundColor: '#2563EB',
-                  borderRadius: 6
-                }]
-              };
-
+              if (!stats || stats.length === 0) {
+                this.applicationStats = [];
+                this.applicationsChartData = {
+                  labels: [],
+                  datasets: [{ label: 'Applications', data: [], backgroundColor: [], borderRadius: 6 }]
+                };
+                this.cdr.detectChanges();
+                return;
+              }
+              // Sort by count descending, most applied first
+              const sorted = [...stats].sort((a, b) => b.applicationsCount - a.applicationsCount);
+              this.applicationStats = sorted;
+              this.updateApplicationsChart();
               this.cdr.detectChanges();
             });
         }
@@ -321,5 +340,48 @@ export class ListProjects implements OnInit, OnDestroy {
 
   onStatusChange(): void {
     this.applyFilters();
+  }
+
+  onApplicationsChartLimitChange(): void {
+    this.updateApplicationsChart();
+  }
+
+  private updateApplicationsChart(): void {
+    const limit = this.applicationsChartLimit === 9999 ? this.applicationStats.length : this.applicationsChartLimit;
+    const sliced = this.applicationStats.slice(0, limit);
+    const maxCount = Math.max(...this.applicationStats.map(s => s.applicationsCount), 1);
+    this.applicationsChartData = {
+      labels: sliced.map(s => s.projectTitle.length > 50 ? s.projectTitle.slice(0, 47) + '…' : s.projectTitle),
+      datasets: [{
+        label: 'Applications',
+        data: sliced.map(s => s.applicationsCount),
+        backgroundColor: sliced.map(s => {
+          const t = s.applicationsCount / maxCount;
+          const r = Math.round(37 + (99 - 37) * (1 - t));
+          const g = Math.round(99 + (179 - 99) * (1 - t));
+          const b = Math.round(235);
+          return `rgb(${r}, ${g}, ${b})`;
+        }),
+        borderRadius: 6,
+        barThickness: 20,
+        maxBarThickness: 28
+      }]
+    };
+  }
+
+  get totalApplicationsCount(): number {
+    return this.applicationStats.reduce((acc, s) => acc + s.applicationsCount, 0);
+  }
+
+  get applicationsChartLimitLabel(): string {
+    return this.applicationsChartLimit === 9999 ? 'All' : `Top ${this.applicationsChartLimit}`;
+  }
+
+  /** Dynamic height so each project bar has ~32px; enables scrolling when many projects. */
+  get applicationsChartHeightPx(): number {
+    const n = this.applicationsChartData?.labels?.length ?? 0;
+    const minHeight = 320;
+    const pxPerBar = 32;
+    return Math.max(minHeight, n * pxPerBar);
   }
 }

@@ -20,5 +20,6 @@ public class ProjectResponse {
     private LocalDateTime deadline;
     private String status;
     private String category;
+    private List<Long> skillIds;
     private List<Skills> skills;
 }

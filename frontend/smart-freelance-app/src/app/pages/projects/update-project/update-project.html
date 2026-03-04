@@ -105,7 +105,7 @@
               (click)="onSkillToggle(skill.id!, { target: { checked: !updateProjectForm.value.skillIds?.includes(skill.id) } })"
             >
               <div class="skill-name">{{ skill.name }}</div>
-              <div class="skill-domain">{{ skill.domain }}</div>
+              <div class="skill-domain">{{ (skill.domains || []).join(', ') }}</div>
             </div>
           </div>
 

@@ -242,22 +242,55 @@
 </div>
 
 
-<!-- Applications Statistics (BAR CHART) -->
-<div class="projects-stats" *ngIf="userRole === 'ADMIN'">
+<!-- Applications Statistics (HORIZONTAL BAR CHART) -->
+<div class="projects-stats applications-chart-section" *ngIf="userRole === 'ADMIN'">
 
   <div class="stats-header">
-    <h3>Applications per Project</h3>
-    <p class="subtitle">
-      Number of freelancers who applied to each project
-    </p>
+    <div class="stats-header-text">
+      <h3>Applications per Project</h3>
+      <p class="subtitle">
+        Number of freelancers who applied to each project
+      </p>
+    </div>
+    <div class="stats-header-controls">
+      <label for="chartLimit">Show</label>
+      <select id="chartLimit"
+              [(ngModel)]="applicationsChartLimit"
+              (ngModelChange)="onApplicationsChartLimitChange()"
+              class="chart-limit-select">
+        @for (opt of applicationsChartLimitOptions; track opt) {
+          <option [value]="opt">{{ opt === 9999 ? 'All projects' : 'Top ' + opt }}</option>
+        }
+      </select>
+    </div>
   </div>
 
-  <div class="chart-bar-wrapper">
-    <canvas baseChart
-            [data]="applicationsChartData"
-            [type]="'bar'"
-            [options]="applicationsChartOptions">
-    </canvas>
-  </div>
+  @if (applicationStats.length > 0) {
+    <div class="applications-summary">
+      <span class="summary-badge">
+        <strong>{{ totalApplicationsCount }}</strong> total applications
+      </span>
+      <span class="summary-badge">
+        <strong>{{ applicationStats.length }}</strong> projects with applications
+      </span>
+      <span class="summary-badge">
+        <strong>{{ (totalApplicationsCount / applicationStats.length) | number:'1.1-1' }}</strong> avg per project
+      </span>
+    </div>
+
+    <div class="chart-bar-scroll-wrap">
+      <div class="chart-bar-wrapper chart-bar-horizontal" [style.height.px]="applicationsChartHeightPx">
+        <canvas baseChart
+                [data]="applicationsChartData"
+                [type]="'bar'"
+                [options]="applicationsChartOptions">
+        </canvas>
+      </div>
+    </div>
+  } @else {
+    <div class="chart-empty-state">
+      <p>No application data yet. Applications will appear here once freelancers apply to projects.</p>
+    </div>
+  }
 
 </div>

@@ -478,11 +478,137 @@
   background: #6B7280; // Neutral Gray
 }
 
+// Applications chart section (different header layout)
+.applications-chart-section .stats-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+  text-align: left;
 
-.chart-bar-wrapper {
-  margin-top: 20px;
-  padding: 20px;
-  background: #ffffff;
+  .stats-header-text {
+    flex: 1;
+    min-width: 200px;
+
+    h3 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      font-size: 0.95rem;
+      color: #6b7280;
+    }
+  }
+
+  .stats-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+
+    label {
+      font-size: 0.9rem;
+      color: #6b7280;
+      white-space: nowrap;
+    }
+  }
+}
+
+.chart-limit-select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #111827;
+  cursor: pointer;
+  min-width: 120px;
+
+  &:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  }
+}
+
+.applications-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.summary-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: #475569;
+
+  strong {
+    color: #1e293b;
+    margin-right: 4px;
+  }
+}
+
+.chart-bar-scroll-wrap {
+  max-height: 75vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   border-radius: 16px;
   border: 1px solid #e5e7eb;
+  background: #ffffff;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+
+    &:hover {
+      background: #94a3b8;
+    }
+  }
+}
+
+.chart-bar-wrapper {
+  margin-top: 0;
+  padding: 24px;
+  background: #ffffff;
+  min-height: 320px;
+}
+
+.chart-bar-horizontal {
+  min-width: 100%;
+}
+
+.chart-empty-state {
+  padding: 48px 24px;
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 2px dashed #e2e8f0;
+
+  p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.95rem;
+  }
 }

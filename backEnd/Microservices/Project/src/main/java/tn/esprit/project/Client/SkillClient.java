@@ -7,7 +7,7 @@ import tn.esprit.project.Dto.Skills;
 
 import java.util.List;
 
-@FeignClient(name = "PORTFOLIO")
+@FeignClient(name = "PORTFOLIO", fallback = SkillClientFallback.class)
 public interface SkillClient {
     @PostMapping("/api/skills/batch")
     List<Skills> getSkillsByIds(@RequestBody List<Long> ids);

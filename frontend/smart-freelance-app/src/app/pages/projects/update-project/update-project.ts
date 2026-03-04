@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ProjectService, Project } from '../../../core/services/project.service';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { PortfolioService, Skill } from '../../../core/services/portfolio.service';
+import { PortfolioService, Skill, Domain } from '../../../core/services/portfolio.service';
 
 @Component({
   selector: 'app-update-project',
@@ -147,7 +147,7 @@ export class UpdateProject {
 
     const skill: Skill = {
       name: this.newSkillName.trim(),
-      domain: this.newSkillDomain.trim(),
+      domains: [this.newSkillDomain.trim() as Domain],
       description: 'Added from project form',
       userId: 2,  // not needed for project creation
       verified: false,    // default

@@ -20,7 +20,7 @@ public interface IProjectService {
 
     List<Project> getProjectsByClientId(Long clientId);
 
-    List<Project> getRecommendedProjects(Long freelancerId);
+    List<ProjectResponse> getRecommendedProjects(Long freelancerId);
 
     Map<String, Object> getProjectStatistics();
     byte[] exportProjectsToPdf();
