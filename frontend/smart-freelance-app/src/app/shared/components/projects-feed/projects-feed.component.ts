@@ -1,16 +1,6 @@
-import {
-  Component,
-  input,
-  output,
-  AfterViewInit,
-  OnDestroy,
-  ViewChild,
-  ElementRef,
-  inject,
-} from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { ProjectFeedCard } from './project-feed-card/project-feed-card.component';
 import { ProjectFeed } from '../../models/project-feed';
-import { IntersectionObserverService } from '../../../core/services/intersection-observer.service';
 
 @Component({
   selector: 'app-projects-feed',
@@ -19,45 +9,39 @@ import { IntersectionObserverService } from '../../../core/services/intersection
   templateUrl: './projects-feed.component.html',
   styleUrl: './projects-feed.component.scss',
 })
-export class ProjectsFeed implements AfterViewInit, OnDestroy {
-  // ── Inputs ───────────────────────────────────────────────────────────────
-  projects  = input.required<ProjectFeed[]>();
-  hasMore   = input<boolean>(true);
-  isLoading = input<boolean>(false);
-  pageSize  = input<number>(6);
+export class ProjectsFeed {
+  projects   = input.required<ProjectFeed[]>();
+  totalCount = input<number>(0);
+  currentPage = input<number>(1);
+  totalPages  = input<number>(1);
+  pageSize    = input<number>(6);
+  startIndex  = input<number>(0);
+  endIndex    = input<number>(0);
 
-  // ── Outputs ──────────────────────────────────────────────────────────────
-  loadMore = output<void>();
+  pageChange = output<number>();
 
-  @ViewChild('sentinel') private sentinelRef!: ElementRef<HTMLDivElement>;
-
-  private ioService = inject(IntersectionObserverService);
-  private cleanup?: () => void;
-
-  /**
-   * Stagger delay: cards within each page-batch slide up with 0–300ms offset.
-   * Uses modulo so only the newest batch animates in (not all previous cards).
-   */
   getAnimDelay(index: number): string {
     const delay = (index % this.pageSize()) * 100;
     return `${Math.min(delay, 300)}ms`;
   }
 
-  ngAfterViewInit(): void {
-    if (!this.sentinelRef?.nativeElement) return;
-
-    this.cleanup = this.ioService.observe(
-      this.sentinelRef.nativeElement,
-      (isIntersecting) => {
-        if (isIntersecting && this.hasMore() && !this.isLoading()) {
-          this.loadMore.emit();
-        }
-      },
-      { rootMargin: '200px', threshold: 0 },
-    );
+  goToPage(page: number): void {
+    this.pageChange.emit(page);
   }
 
-  ngOnDestroy(): void {
-    this.cleanup?.();
+  /** Page numbers to show (with ellipsis for long ranges) */
+  get pageNumbers(): number[] {
+    const total = this.totalPages();
+    const curr = this.currentPage();
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: number[] = [];
+    if (curr <= 4) {
+      pages.push(1, 2, 3, 4, 5, -1, total);
+    } else if (curr >= total - 3) {
+      pages.push(1, -1, total - 4, total - 3, total - 2, total - 1, total);
+    } else {
+      pages.push(1, -1, curr - 1, curr, curr + 1, -1, total);
+    }
+    return pages;
   }
 }

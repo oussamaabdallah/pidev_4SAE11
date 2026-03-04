@@ -16,9 +16,6 @@ import {
   MonthlyEvolution,
 } from '../../../core/services/offer.service';
 
-<<<<<<< HEAD
-const DEBOUNCE_MS = 350;
-=======
 export const CATEGORIES = [
   'Frontend', 'Backend', 'Full Stack', 'UI/UX',
   'SEO', 'Content', 'Machine Learning', 'Cloud',
@@ -41,7 +38,6 @@ export const OFFER_STATUSES = [
   { value: 'CLOSED',      label: 'Closed' },
 ];
 
->>>>>>> fc652c4 (le nouveau version)
 const PAGE_SIZE = 10;
 
 @Component({
@@ -71,10 +67,7 @@ export class ListOffers implements OnInit, OnDestroy {
   readonly offerStatuses = OFFER_STATUSES;
 
   private destroy$ = new Subject<void>();
-<<<<<<< HEAD
-=======
   private formSub: Subscription | null = null;
->>>>>>> fc652c4 (le nouveau version)
 
   // Statistics
   statsByStatus: Record<string, number> | null = null;
@@ -138,21 +131,6 @@ export class ListOffers implements OnInit, OnDestroy {
     this.formSub?.unsubscribe();
   }
 
-<<<<<<< HEAD
-  private setupSearchDebounce(): void {
-    this.keyword$
-      .pipe(debounceTime(DEBOUNCE_MS), distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.currentPage = 0;
-        this.loadOffers();
-      });
-  }
-
-  onKeywordInput(): void {
-    this.keyword$.next(this.keyword);
-  }
-
-=======
   get hasActiveFilters(): boolean {
     const v = this.searchForm?.value;
     if (!v) return false;
@@ -169,7 +147,6 @@ export class ListOffers implements OnInit, OnDestroy {
     this.loadOffers();
   }
 
->>>>>>> fc652c4 (le nouveau version)
   buildFilter(): OfferFilterRequest {
     const v = this.searchForm.value;
     const sortOpt = SORT_OPTIONS[Number(v.sortIndex) ?? 0] ?? SORT_OPTIONS[0];
@@ -260,66 +237,7 @@ export class ListOffers implements OnInit, OnDestroy {
   refreshMonthlyEvolution(): void {
     if (!this.currentUser?.id) return;
     this.offerService.getMonthlyEvolution(this.currentUser.id, this.selectedYear).subscribe({
-<<<<<<< HEAD
-      next: (res) => {
-        this.monthlyEvolution = res ?? null;
-        this.cdr.detectChanges();
-      },
-    });
-  }
-
-  openDeleteModal(offer: Offer): void {
-    this.offerToDelete = offer;
-  }
-
-  closeDeleteModal(): void {
-    if (!this.deleting) this.offerToDelete = null;
-  }
-
-  doDelete(): void {
-    if (!this.offerToDelete || !this.currentUser?.id) return;
-    this.deleting = true;
-    this.offerService.deleteOffer(this.offerToDelete.id, this.currentUser.id).subscribe({
-      next: (ok) => {
-        this.deleting = false;
-        this.offerToDelete = null;
-        if (ok) {
-          this.loadOffers();
-          this.loadStats();
-        } else this.errorMessage = 'Failed to delete offer.';
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.deleting = false;
-        this.offerToDelete = null;
-        this.errorMessage = err?.error?.message || 'Failed to delete offer.';
-        this.cdr.detectChanges();
-      },
-    });
-  }
-
-  openPublishModal(offer: Offer): void {
-    this.offerToPublish = offer;
-  }
-
-  closePublishModal(): void {
-    if (!this.publishing) this.offerToPublish = null;
-  }
-
-  doPublish(): void {
-    if (!this.offerToPublish || !this.currentUser?.id) return;
-    this.publishing = true;
-    this.offerService.publishOffer(this.offerToPublish.id, this.currentUser.id).subscribe((updated) => {
-      this.publishing = false;
-      this.offerToPublish = null;
-      if (updated) {
-        this.loadOffers();
-        this.loadStats();
-      } else this.errorMessage = 'Failed to publish offer.';
-      this.cdr.detectChanges();
-=======
       next: (res) => { this.monthlyEvolution = res ?? null; this.cdr.detectChanges(); },
->>>>>>> fc652c4 (le nouveau version)
     });
   }
 

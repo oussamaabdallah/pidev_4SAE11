@@ -2,7 +2,9 @@ package org.example.offer.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.offer.client.NotificationClient;
 import org.example.offer.client.UserFeignClient;
+import org.example.offer.dto.NotificationRequestDto;
 import org.example.offer.dto.request.AnswerQuestionRequest;
 import org.example.offer.dto.request.OfferQuestionRequest;
 import org.example.offer.dto.response.OfferQuestionResponse;
@@ -30,12 +32,9 @@ public class OfferQuestionService {
 
     private final OfferQuestionRepository questionRepository;
     private final OfferRepository offerRepository;
-<<<<<<< HEAD
-=======
-    private final NotificationService notificationService;
+    private final NotificationClient notificationClient;
     private final EmailService emailService;
     private final UserFeignClient userFeignClient;
->>>>>>> fc652c4 (le nouveau version)
 
     /**
      * Liste des questions-réponses pour une offre (ordre anti-chronologique).
@@ -62,14 +61,19 @@ public class OfferQuestionService {
         q.setQuestionText(request.getQuestionText().trim());
         q = questionRepository.save(q);
         log.info("Question added for offer {} by client {}", offerId, clientId);
-<<<<<<< HEAD
-=======
 
-        // 1. Notification in-app pour le freelancer
+        // 1. Notification in-app pour le freelancer (via Notification microservice)
         try {
             String title = "New question on your offer";
             String msg = "A client asked: \"" + (q.getQuestionText().length() > 80 ? q.getQuestionText().substring(0, 80) + "…" : q.getQuestionText()) + "\"";
-            notificationService.createNotification(offer.getFreelancerId(), NotificationType.NEW_QUESTION, title, msg, offerId, q.getId());
+            NotificationRequestDto req = NotificationRequestDto.builder()
+                    .userId(String.valueOf(offer.getFreelancerId()))
+                    .title(title)
+                    .body(msg)
+                    .type("NEW_QUESTION")
+                    .data(Map.of("offerId", String.valueOf(offerId), "questionId", String.valueOf(q.getId())))
+                    .build();
+            notificationClient.create(req);
         } catch (Exception e) {
             log.warn("Could not create notification for new question (offer={}, questionId={}): {}", offerId, q.getId(), e.getMessage());
         }
@@ -95,7 +99,6 @@ public class OfferQuestionService {
             log.error("[NOTIF] Error sending notifications (offer={}, questionId={}): {}", offerId, q.getId(), e.getMessage());
         }
 
->>>>>>> fc652c4 (le nouveau version)
         return toResponse(q);
     }
 

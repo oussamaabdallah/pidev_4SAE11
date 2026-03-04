@@ -269,8 +269,6 @@ export class ListProjects implements OnInit, OnDestroy {
   onStatusChange(): void {
     this.applyFilters();
   }
-<<<<<<< HEAD
-=======
 
   openQrModal(project: Project): void {
     this.qrProject = project;
@@ -317,5 +315,4 @@ export class ListProjects implements OnInit, OnDestroy {
   get isBrowseJobs(): boolean {
     return this.router.url.includes('browse-jobs');
   }
->>>>>>> fc652c4 (le nouveau version)
 }

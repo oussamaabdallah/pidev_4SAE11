@@ -8,6 +8,8 @@ export interface ProjectFeed {
   description: string;
   skills: string[];
   postedAgo: string;
+  /** ISO date string for sorting */
+  createdAt?: string;
   category?: string;
   isRemote?: boolean;
 }

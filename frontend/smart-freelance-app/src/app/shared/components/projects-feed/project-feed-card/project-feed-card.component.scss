@@ -1,4 +1,4 @@
-@import '../../../../../styles/freelancia.tokens';
+@import '../../../../../styles/variables';
 
 // ── Slide-up entrance animation ──────────────────────────────────────────────
 @keyframes slideUp {
@@ -6,33 +6,30 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-// ── Card shell ───────────────────────────────────────────────────────────────
+// ── Card shell (matches list-projects project-card) ─────────────────────────
 .feed-card {
   display: block;
-  background: $fb-card;
-  border-radius: $fb-r-card;
-  box-shadow: $fb-shadow-card;
-  padding: $fb-s3;
+  background: $white;
+  border-radius: $radius-xl;
+  border: 1.5px solid $neutral-200;
+  padding: $spacing-lg;
   cursor: pointer;
   outline: none;
   user-select: none;
 
-  // Entrance animation — delay injected via [style.animation-delay]
   animation: slideUp 400ms cubic-bezier(0.4, 0, 0.2, 1);
   animation-fill-mode: both;
 
-  // Hover lift
-  transition:
-    transform 220ms cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: $transition-base;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: $fb-shadow-hover;
+    border-color: $primary-500;
+    box-shadow: 0 6px 24px rgba($primary-500, 0.12);
+    transform: translateY(-2px);
   }
 
   &:focus-visible {
-    outline: 2px solid $fb-primary;
+    outline: 2px solid $primary-500;
     outline-offset: 3px;
   }
 }
@@ -42,24 +39,24 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: $fb-s2;
-  margin-bottom: $fb-s2;
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
 }
 
 .client-info {
   display: flex;
   align-items: center;
-  gap: $fb-s1;
+  gap: $spacing-sm;
   min-width: 0;
 }
 
 .client-avatar {
   width: 40px;
   height: 40px;
-  border-radius: $fb-r-avatar;
+  border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
-  background: $fb-primary-a06;
+  background: $neutral-100;
 }
 
 .client-meta {
@@ -70,9 +67,9 @@
 }
 
 .client-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: $fb-text;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $neutral-800;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -86,22 +83,22 @@
 
 .star {
   font-size: 13px;
-  color: #D4D4D4;
+  color: $neutral-300;
   line-height: 1;
 
-  &--filled { color: $fb-gold; }
+  &--filled { color: #F5C518; }
 }
 
 .rating-val {
-  font-size: 12px;
-  font-weight: 600;
-  color: $fb-text-2;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $neutral-600;
   margin-left: 4px;
 }
 
 .posted-ago {
-  font-size: 12px;
-  color: $fb-text-2;
+  font-size: $font-size-xs;
+  color: $neutral-500;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -111,76 +108,70 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: $fb-s2;
-  margin-bottom: $fb-s1;
+  gap: $spacing-md;
+  margin-bottom: $spacing-sm;
 }
 
 .project-title {
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  color: $fb-text;
-  line-height: 1.25;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $neutral-900;
+  line-height: $line-height-snug;
   flex: 1;
   min-width: 0;
 }
 
 .project-budget {
-  font-size: 18px;
-  font-weight: 700;
-  color: $fb-success;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $success-600;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 // ── Row 3: Description (3-line clamp) ────────────────────────────────────────
 .project-desc {
-  margin: 0 0 $fb-s2;
-  font-size: 14px;
-  line-height: 1.6;
-  color: $fb-text-2;
+  margin: 0 0 $spacing-md;
+  font-size: $font-size-sm;
+  line-height: $line-height-relaxed;
+  color: $neutral-600;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-// ── Row 4: Skills ────────────────────────────────────────────────────────────
+// ── Row 4: Skills (matches list-projects .skill) ──────────────────────────────
 .skills-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: $fb-s2;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-md;
 }
 
 .skill-pill {
   display: inline-block;
-  padding: 4px 12px;
-  background: $fb-primary-a06;
-  color: $fb-primary;
-  border-radius: $fb-r-pill;
-  font-size: 12px;
-  font-weight: 500;
-  border: 1px solid $fb-primary-a12;
-  transition: background 180ms ease;
-
-  &:hover {
-    background: $fb-primary-a12;
-  }
+  padding: 2px $spacing-sm;
+  background: $neutral-100;
+  color: $neutral-600;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  border: 1px solid $neutral-200;
 
   &--more {
-    background: #F0F2F5;
-    color: $fb-text-2;
-    border-color: $fb-border;
+    background: $neutral-50;
+    color: $neutral-500;
   }
 }
 
 // ── Row 5: Action buttons ────────────────────────────────────────────────────
 .card-actions {
   display: flex;
-  gap: $fb-s1;
-  padding-top: $fb-s2;
-  border-top: 1px solid $fb-border;
+  gap: $spacing-sm;
+  padding-top: $spacing-md;
+  border-top: 1px solid $neutral-100;
 }
 
 .btn {
@@ -188,14 +179,14 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 16px;
-  border-radius: $fb-r-btn;
-  font-size: 13px;
-  font-weight: 600;
+  padding: $spacing-xs $spacing-md;
+  border-radius: $radius-full;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
   cursor: pointer;
   border: none;
   font-family: inherit;
-  transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: $transition-base;
   white-space: nowrap;
 
   svg {
@@ -206,59 +197,54 @@
 
   &:active { transform: scale(0.97); }
 
-  // ── Apply Now ──────────────────────────────────────────────────────────────
   &--apply {
-    background: $fb-primary;
-    color: #fff;
+    background: $gradient-primary;
+    color: $white;
     flex: 1;
 
     &:hover {
-      background: $fb-primary-dk;
-      box-shadow: 0 4px 16px $fb-primary-a24;
+      box-shadow: $shadow-primary;
+      transform: translateY(-1px);
     }
   }
 
-  // ── Save ───────────────────────────────────────────────────────────────────
   &--save {
     background: transparent;
-    color: $fb-primary;
-    border: 1.5px solid $fb-primary-a24;
+    color: $primary-500;
+    border: 1.5px solid rgba($primary-500, 0.3);
 
     &:hover {
-      background: $fb-primary-a06;
-      border-color: $fb-primary;
+      background: rgba($primary-500, 0.08);
+      border-color: $primary-500;
     }
 
     &.btn--saved {
-      background: $fb-primary-a06;
-      color: $fb-primary;
-      border-color: $fb-primary;
+      background: rgba($primary-500, 0.1);
+      color: $primary-500;
+      border-color: $primary-500;
     }
   }
 
-  // ── Message ────────────────────────────────────────────────────────────────
   &--message {
     background: transparent;
-    color: $fb-text-2;
-    border: 1.5px solid $fb-border;
+    color: $neutral-600;
+    border: 1.5px solid $neutral-300;
 
     &:hover {
-      color: $fb-text;
-      border-color: #c0c4cc;
-      background: #f5f6f7;
+      color: $neutral-800;
+      background: $neutral-100;
+      border-color: $neutral-400;
     }
   }
 }
 
-// ── Responsive ───────────────────────────────────────────────────────────────
-@media (max-width: 480px) {
-  .feed-card { padding: $fb-s2; }
+@media (max-width: 600px) {
+  .feed-card { padding: $spacing-md; }
 
   .title-row { flex-direction: column; gap: 4px; }
 
   .card-actions {
     flex-wrap: wrap;
-
     .btn--apply { width: 100%; order: -1; }
   }
 }

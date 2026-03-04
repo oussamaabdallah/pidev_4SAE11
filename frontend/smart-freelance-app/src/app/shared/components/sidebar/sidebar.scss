@@ -1,15 +1,31 @@
+// ── Host: flex container for spacer + sidebar ──────────────────
+:host {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.sidebar-spacer {
+  flex-shrink: 0;
+  background: var(--bg-header-footer);
+  transition: width 0.25s ease;
+  /* Width set via [style.width.px] in template */
+}
+
 // ── Shell ─────────────────────────────────────────────────────
 
 .sidebar {
   width: 260px;
-  background: var(--bg-card);
+  background: var(--bg-header-footer);
   border-right: 1px solid var(--border-light);
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 64px;
+  height: calc(100vh - 64px);
+  z-index: 1100;
+  overflow: hidden;
 
   // ── Admin: collapsible ──────────────────────────────────
   &--admin {
@@ -86,6 +102,9 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: var(--spacing-sm) 0;
 }
 
@@ -226,12 +245,13 @@
 }
 
 @media (max-width: 768px) {
+  .sidebar-spacer {
+    display: none;
+  }
+
   .sidebar {
-    position: fixed;
+    top: 64px;
     left: -280px;
-    top: 0;
-    bottom: 0;
-    z-index: 1000;
     width: 280px !important;
     box-shadow: var(--shadow-lg);
     transition: left 0.3s ease;

@@ -7,32 +7,75 @@
         [animDelay]="getAnimDelay(i)"
         class="feed-card-host" />
     } @empty {
-      @if (!isLoading()) {
-        <div class="feed-empty">
-          <span class="empty-icon" aria-hidden="true">🔍</span>
-          <h3>No open projects</h3>
-          <p>There are no available projects right now. Check back soon!</p>
-        </div>
-      }
+      <div class="feed-empty">
+        <span class="empty-icon" aria-hidden="true">🔍</span>
+        <h3>No projects match</h3>
+        <p>Try adjusting your search or filters to find open projects.</p>
+      </div>
     }
   </div>
 
-  <!-- Sentinel — IntersectionObserver target -->
-  <div #sentinel class="sentinel" aria-hidden="true"></div>
-
-  <!-- Loading indicator -->
-  @if (isLoading()) {
-    <div class="feed-loader" role="status" aria-live="polite">
-      <div class="spinner"></div>
-      <span>Loading more projects…</span>
-    </div>
-  }
-
-  <!-- End-of-feed message -->
-  @if (!hasMore() && !isLoading() && projects().length > 0) {
-    <div class="feed-end" role="status" aria-live="polite">
+  @if (projects().length > 0 && totalPages() > 1) {
+    <nav class="feed-pagination" aria-label="Project feed pagination">
+      <p class="pagination-info">
+        Showing {{ startIndex() + 1 }}–{{ endIndex() }} of {{ totalCount() }} projects
+      </p>
+      <div class="pagination-controls">
+        <button
+          type="button"
+          class="btn-pagination"
+          [disabled]="currentPage() <= 1"
+          (click)="goToPage(1)"
+          aria-label="First page">
+          First
+        </button>
+        <button
+          type="button"
+          class="btn-pagination"
+          [disabled]="currentPage() <= 1"
+          (click)="goToPage(currentPage() - 1)"
+          aria-label="Previous page">
+          Prev
+        </button>
+        <span class="pagination-pages">
+          @for (p of pageNumbers; track p) {
+            @if (p === -1) {
+              <span class="page-ellipsis" aria-hidden="true">…</span>
+            } @else {
+              <button
+                type="button"
+                class="btn-pagination btn-pagination--num"
+                [class.btn-pagination--active]="p === currentPage()"
+                (click)="goToPage(p)"
+                [attr.aria-label]="'Page ' + p"
+                [attr.aria-current]="p === currentPage() ? 'page' : null">
+                {{ p }}
+              </button>
+            }
+          }
+        </span>
+        <button
+          type="button"
+          class="btn-pagination"
+          [disabled]="currentPage() >= totalPages()"
+          (click)="goToPage(currentPage() + 1)"
+          aria-label="Next page">
+          Next
+        </button>
+        <button
+          type="button"
+          class="btn-pagination"
+          [disabled]="currentPage() >= totalPages()"
+          (click)="goToPage(totalPages())"
+          aria-label="Last page">
+          Last
+        </button>
+      </div>
+    </nav>
+  } @else if (projects().length > 0 && totalPages() <= 1) {
+    <div class="feed-end" role="status">
       <span class="end-check" aria-hidden="true">✓</span>
-      <p>You've seen all available projects</p>
+      <p>Showing all {{ totalCount() }} projects</p>
     </div>
   }
 

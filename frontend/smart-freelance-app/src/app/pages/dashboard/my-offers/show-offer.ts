@@ -32,8 +32,6 @@ export class ShowOffer implements OnInit {
   answerTexts: Record<number, string> = {};
   answeringId: number | null = null;
 
-<<<<<<< HEAD
-=======
   // ── Offer Quality Score ──────────────────────────────────────
   scoreExpanded = true;
 
@@ -86,6 +84,10 @@ export class ShowOffer implements OnInit {
   get scoreDashoffset(): number {
     const circumference = 2 * Math.PI * 52;
     return circumference - (this.qualityScore / 100) * circumference;
+  }
+
+  get scoreDasharray(): string {
+    return String(2 * Math.PI * 52);
   }
 
   get scoreChecks(): { label: string; tip: string; ok: boolean; pts: number }[] {
@@ -146,7 +148,6 @@ export class ShowOffer implements OnInit {
   rejectReason = '';
   rejectError: string | null = null;
 
->>>>>>> fc652c4 (le nouveau version)
   constructor(
     private route: ActivatedRoute,
     private router: Router,

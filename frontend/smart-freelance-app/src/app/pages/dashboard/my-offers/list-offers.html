@@ -9,22 +9,8 @@
     <a routerLink="/dashboard/my-offers/add" class="btn btn--add-offer">+ Add Offer</a>
   </div>
 
-<<<<<<< HEAD
-  <!-- Recherche dynamique (dès le 1er caractère, requêtes JSON backend) -->
-  <section class="search-section">
-    <div class="search-row">
-      <input
-        type="text"
-        class="search-input"
-        placeholder="Search by title, description, tags…"
-        [(ngModel)]="keyword"
-        (input)="onKeywordInput()"
-      />
-    </div>
-=======
   <!-- ── Search Panel ────────────────────────────────────────────────── -->
   <form [formGroup]="searchForm" class="search-panel" autocomplete="off">
->>>>>>> fc652c4 (le nouveau version)
 
     <div class="search-bar">
 
@@ -132,39 +118,6 @@
           <div class="sk sk--text sk--short"></div>
           <div class="sk sk--btn"></div>
         </div>
-<<<<<<< HEAD
-        <span class="offer-domain">{{ offer.domain }}</span>
-        <p class="offer-description">{{ (offer.description | slice:0:120) }}{{ ((offer.description || '').length) > 120 ? '…' : '' }}</p>
-        <div class="offer-meta">
-          <span class="price">{{ offer.price | number:'1.2-2' }} ({{ offer.durationType }})</span>
-          <span *ngIf="offer.pendingApplicationsCount != null" class="applications">{{ offer.pendingApplicationsCount }} pending</span>
-        </div>
-        <div class="offer-actions">
-          <a [routerLink]="['/dashboard/my-offers', offer.id, 'show']" class="btn btn--info">View</a>
-          <a *ngIf="offer.offerStatus === 'DRAFT'" [routerLink]="['/dashboard/my-offers', offer.id, 'edit']" class="btn btn--update">Edit</a>
-          <button *ngIf="offer.offerStatus === 'DRAFT'" (click)="openPublishModal(offer)" class="btn btn--publish">Publish</button>
-          <button (click)="openDeleteModal(offer)" class="btn btn--delete">Delete</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Pagination -->
-  @if (totalPages > 1 && !loading) {
-    <div class="pagination">
-      <button type="button" [disabled]="currentPage === 0" (click)="goToPage(currentPage - 1)">Previous</button>
-      <span class="page-info">Page {{ currentPage + 1 }} / {{ totalPages }}</span>
-      <button type="button" [disabled]="currentPage >= totalPages - 1" (click)="goToPage(currentPage + 1)">Next</button>
-    </div>
-  }
-
-  <div class="empty-state" *ngIf="!loading && !errorMessage && offers.length === 0">
-    <span class="empty-icon">📋</span>
-    <p>No offers yet. Create your first offer to get started!</p>
-    <div class="empty-actions">
-      <button type="button" class="btn btn--clear" (click)="clearFilters()">Clear filters</button>
-      <a routerLink="/dashboard/my-offers/add" class="btn btn--add-offer">Create your first offer</a>
-=======
       }
     </div>
   }
@@ -174,7 +127,6 @@
     <div class="error-state">
       <p class="error">{{ errorMessage }}</p>
       <button (click)="loadOffers()" class="btn btn--retry">Try Again</button>
->>>>>>> fc652c4 (le nouveau version)
     </div>
   }
 

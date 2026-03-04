@@ -1,4 +1,4 @@
-@import '../../../../styles/freelancia.tokens';
+@import '../../../../styles/variables';
 
 :host {
   display: block;
@@ -7,18 +7,21 @@
 // ── Feed wrapper ─────────────────────────────────────────────────────────────
 .projects-feed {
   width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  padding: $fb-s3 $fb-s2 $fb-s5;
-  background: $fb-bg;
-  min-height: 100vh;
 }
 
-// ── Card list (stacked column) ───────────────────────────────────────────────
+// ── Card grid: 3 columns, 6 per page (2 rows) ───────────────────────────────
 .feed-list {
-  display: flex;
-  flex-direction: column;
-  gap: $fb-s2;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-lg;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .feed-card-host {
@@ -27,60 +30,107 @@
 
 // ── Empty state ──────────────────────────────────────────────────────────────
 .feed-empty {
+  grid-column: 1 / -1;
   text-align: center;
-  padding: $fb-s5 $fb-s3;
-  background: $fb-card;
-  border-radius: $fb-r-card;
-  box-shadow: $fb-shadow-card;
+  padding: $spacing-3xl $spacing-xl;
+  background: $neutral-50;
+  border-radius: $radius-xl;
+  border: 1.5px solid $neutral-200;
 
   .empty-icon {
     font-size: 48px;
     display: block;
-    margin-bottom: $fb-s2;
+    margin-bottom: $spacing-md;
   }
 
   h3 {
-    margin: 0 0 8px;
-    font-size: 20px;
-    color: $fb-text;
+    margin: 0 0 $spacing-sm;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $neutral-800;
   }
 
   p {
     margin: 0;
-    font-size: 14px;
-    color: $fb-text-2;
+    font-size: $font-size-sm;
+    color: $neutral-600;
   }
 }
 
-// ── IO sentinel ──────────────────────────────────────────────────────────────
-.sentinel {
-  height: 1px;
-  width: 100%;
+// ── Pagination ───────────────────────────────────────────────────────────────
+.feed-pagination {
+  margin-top: $spacing-xl;
+  padding-top: $spacing-lg;
+  border-top: 1px solid $neutral-200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-md;
 }
 
-// ── Loading spinner ──────────────────────────────────────────────────────────
-.feed-loader {
+.pagination-info {
+  margin: 0;
+  font-size: $font-size-sm;
+  color: $neutral-600;
+}
+
+.pagination-controls {
   display: flex;
   align-items: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
-  padding: $fb-s3;
-  color: $fb-text-2;
-  font-size: 14px;
 }
 
-.spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid $fb-border;
-  border-top-color: $fb-primary;
-  border-radius: 50%;
-  animation: spin 700ms linear infinite;
-  flex-shrink: 0;
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.btn-pagination {
+  min-width: 40px;
+  padding: $spacing-xs $spacing-md;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $neutral-700;
+  background: $white;
+  border: 1.5px solid $neutral-300;
+  border-radius: $radius-full;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: $neutral-100;
+    border-color: $primary-500;
+    color: $primary-500;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--num {
+    min-width: 36px;
+  }
+
+  &--active {
+    background: $gradient-primary;
+    color: $white;
+    border-color: transparent;
+
+    &:hover:not(:disabled) {
+      background: $gradient-primary-hover;
+      color: $white;
+    }
+  }
+}
+
+.page-ellipsis {
+  padding: 0 $spacing-xs;
+  color: $neutral-500;
+  font-size: $font-size-sm;
 }
 
 // ── End-of-feed ──────────────────────────────────────────────────────────────
@@ -88,10 +138,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: $fb-s3;
-  color: $fb-text-2;
-  font-size: 14px;
+  gap: $spacing-sm;
+  padding: $spacing-lg;
+  color: $neutral-600;
+  font-size: $font-size-sm;
 
   p { margin: 0; }
 }
@@ -102,24 +152,9 @@
   justify-content: center;
   width: 22px;
   height: 22px;
-  background: $fb-success-lt;
-  color: $fb-success;
+  background: $success-100;
+  color: $success-600;
   border-radius: 50%;
   font-size: 11px;
   font-weight: 700;
-}
-
-// ── Responsive ───────────────────────────────────────────────────────────────
-@media (max-width: 768px) {
-  .projects-feed {
-    max-width: 500px;
-    padding: $fb-s2 $fb-s1 $fb-s5;
-  }
-}
-
-@media (max-width: 480px) {
-  .projects-feed {
-    max-width: 100%;
-    padding: $fb-s1 $fb-s1 $fb-s5;
-  }
 }

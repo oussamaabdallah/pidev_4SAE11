@@ -252,17 +252,6 @@
   }
 
   .modal {
-<<<<<<< HEAD
-    background: $white;
-    border-radius: $radius-2xl;
-    width: 100%;
-    max-width: 480px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: $shadow-2xl;
-    animation: slideUp $transition-slow;
-    @include custom-scrollbar;
-=======
     max-width: 480px;
     width: 100%;
     border: 0;
@@ -286,7 +275,6 @@
     overflow: hidden;
     animation: orderSlideUp 0.5s ease-out;
   }
->>>>>>> fc652c4 (le nouveau version)
 
     h3 {
       margin: 0;
@@ -388,9 +376,6 @@
       font-size: $font-size-sm;
       margin: $spacing-md $spacing-2xl 0;
     }
-<<<<<<< HEAD
-=======
-  }
 
   .package-badge {
     position: absolute;
@@ -624,7 +609,6 @@
     font-size: 13px;
     color: $error-500;
     margin-top: 4px;
->>>>>>> fc652c4 (le nouveau version)
   }
 }
 
