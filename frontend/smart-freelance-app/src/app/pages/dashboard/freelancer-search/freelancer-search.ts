@@ -68,20 +68,24 @@ export class FreelancerSearch implements OnInit {
   }
 
   applyFilters(): void {
-    const q = this.search.toLowerCase().trim();
+    const q = (this.search ?? '').toLowerCase().trim();
+    const skillTerm = (this.activeSkill ?? 'All').toLowerCase();
+    const skills = (f: { skills?: { name: string }[] }) => f.skills ?? [];
+    const title = (f: { title?: string }) => (f.title ?? '').toLowerCase();
+
     let list = this.allFreelancers.filter(f => {
       const matchSearch = !q
-        || `${f.firstName} ${f.lastName}`.toLowerCase().includes(q)
-        || f.title.toLowerCase().includes(q)
-        || f.skills.some(s => s.name.toLowerCase().includes(q));
+        || `${f.firstName ?? ''} ${f.lastName ?? ''}`.toLowerCase().includes(q)
+        || title(f).includes(q)
+        || skills(f).some(s => (s?.name ?? '').toLowerCase().includes(q));
       const matchSkill = this.activeSkill === 'All'
-        || f.skills.some(s => s.name.toLowerCase().includes(this.activeSkill.toLowerCase()));
+        || skills(f).some(s => (s?.name ?? '').toLowerCase().includes(skillTerm));
       return matchSearch && matchSkill;
     });
 
     list = [...list].sort((a, b) =>
-      this.sortBy === 'rating' ? b.rating - a.rating :
-      this.sortBy === 'reviews' ? b.totalReviews - a.totalReviews :
+      this.sortBy === 'rating' ? (b.rating ?? 0) - (a.rating ?? 0) :
+      this.sortBy === 'reviews' ? (b.totalReviews ?? 0) - (a.totalReviews ?? 0) :
       0
     );
     this.filtered = list;

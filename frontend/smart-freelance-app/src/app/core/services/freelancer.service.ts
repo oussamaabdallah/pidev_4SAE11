@@ -329,23 +329,37 @@ export class FreelancerService {
     private reviewSvc: ReviewService,
   ) {}
 
-  /** Returns a card-summary list of all freelancers. Falls back to dummy data on error. */
+  /** Returns a card-summary list of all freelancers with skills for filtering. Falls back to dummy data on error. */
   getAllFreelancers(): Observable<FreelancerCard[]> {
     return this.userSvc.getAll().pipe(
-      map((users: User[]) =>
-        users
-          .filter(u => u.role === 'FREELANCER')
-          .map(u => ({
-            userId: u.id,
-            firstName: u.firstName,
-            lastName: u.lastName,
-            title: 'Freelancer',
-            avatarUrl: u.avatarUrl,
-            rating: 4.5,
-            totalReviews: 0,
-            skills: [],
-          }))
-      ),
+      switchMap((users: User[]) => {
+        const freelancers = users.filter(u => u.role === 'FREELANCER');
+        if (freelancers.length === 0) return of([]);
+        return forkJoin(
+          freelancers.map(u =>
+            this.portfolioSvc.getUserSkills(u.id).pipe(
+              catchError(() => of([])),
+              map(skills => ({
+                user: u,
+                skills: skills.map(skillFromApi),
+              }))
+            )
+          )
+        ).pipe(
+          map(results =>
+            results.map(({ user, skills }) => ({
+              userId: user.id,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              title: 'Freelancer',
+              avatarUrl: user.avatarUrl,
+              rating: 4.5,
+              totalReviews: 0,
+              skills,
+            }))
+          )
+        );
+      }),
       catchError(() => of(DUMMY_FREELANCERS.map(p => this._profileToCard(p)))),
     );
   }
