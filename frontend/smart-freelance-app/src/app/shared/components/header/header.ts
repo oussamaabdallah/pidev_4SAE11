@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserService } from '../../../core/services/user.service';
 import { NotificationService, NotificationItem } from '../../../core/services/notification.service';
+import { ProfileViewService } from '../../../core/services/profile-view.service';
 import { Button } from '../button/button';
 import { LiveSearch } from '../live-search/live-search.component';
 
@@ -29,6 +30,9 @@ export class Header implements OnInit, OnDestroy {
   userMenuOpen = signal(false);
   // Notifications dropdown
   notifDropdownOpen = signal(false);
+  // Profile views dropdown (freelancers only)
+  profileViewDropdownOpen = signal(false);
+  profileViewCount = signal(0);
   notificationList = signal<NotificationItem[]>([]);
   notifDropdownLoading = signal(false);
   // Active nav dropdown key: 'work' | 'growth' | 'talent' | 'manage' | null
@@ -51,6 +55,7 @@ export class Header implements OnInit, OnDestroy {
     public auth: AuthService,
     private userService: UserService,
     private notificationService: NotificationService,
+    private profileViewService: ProfileViewService,
     private router: Router
   ) {}
 
@@ -64,15 +69,20 @@ export class Header implements OnInit, OnDestroy {
         });
       }
       this.refreshNotificationCount(true);
+      this.refreshProfileViewCount();
       this.routerSub = this.router.events
         .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
         .subscribe((e) => {
           if (e.urlAfterRedirects?.includes('/dashboard')) {
             this.refreshNotificationCount(true);
+            this.refreshProfileViewCount();
           }
         });
       // Poll for real-time unread count when on dashboard
-      this.pollTimer = setInterval(() => this.refreshNotificationCount(false), POLL_INTERVAL_MS);
+      this.pollTimer = setInterval(() => {
+        this.refreshNotificationCount(false);
+        this.refreshProfileViewCount();
+      }, POLL_INTERVAL_MS);
     }
   }
 
@@ -106,6 +116,32 @@ export class Header implements OnInit, OnDestroy {
       this.showToast.set(false);
       this.toastTimer = undefined;
     }, TOAST_AUTO_DISMISS_MS);
+  }
+
+  private refreshProfileViewCount(): void {
+    if (!this.auth.isFreelancer()) return;
+    const userId = this.auth.getUserId();
+    if (userId == null) return;
+    this.profileViewService.getTotalCount(userId).subscribe({
+      next: (count) => this.profileViewCount.set(count),
+      error: () => this.profileViewCount.set(0),
+    });
+  }
+
+  toggleProfileViewDropdown(): void {
+    const open = !this.profileViewDropdownOpen();
+    this.profileViewDropdownOpen.set(open);
+    if (open) this.refreshProfileViewCount();
+    this.userMenuOpen.set(false);
+    this.notifDropdownOpen.set(false);
+  }
+
+  goToProfileAnalytics(): void {
+    const userId = this.auth.getUserId();
+    this.profileViewDropdownOpen.set(false);
+    if (userId != null) {
+      this.router.navigate(['/dashboard/freelancer-portfolio', userId]);
+    }
   }
 
   toggleNotifDropdown(): void {
@@ -248,6 +284,9 @@ export class Header implements OnInit, OnDestroy {
     }
     if (!target.closest('.notif-container')) {
       this.notifDropdownOpen.set(false);
+    }
+    if (!target.closest('.profile-views-container')) {
+      this.profileViewDropdownOpen.set(false);
     }
     if (!target.closest('.nav-group')) {
       this.activeDropdown.set(null);

@@ -242,6 +242,46 @@
             </svg>
           </a>
 
+          <!-- Profile Views dropdown (freelancers only) -->
+          @if (auth.isFreelancer()) {
+            <div class="profile-views-container">
+              <button type="button"
+                      class="icon-btn profile-views-btn"
+                      (click)="toggleProfileViewDropdown()"
+                      [attr.aria-expanded]="profileViewDropdownOpen()"
+                      aria-label="Profile Views">
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M10 4C5.5 4 2 7.5 2 12s3.5 4 8 4 8-1.5 8-4-3.5-8-8-8z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="10" cy="12" r="2.5" stroke="currentColor" stroke-width="1.4"/>
+                </svg>
+                @if (profileViewCount() > 0) {
+                  <span class="profile-views-badge" aria-label="{{ profileViewCount() }} views">{{ profileViewCount() > 99 ? '99+' : profileViewCount() }}</span>
+                }
+              </button>
+              @if (profileViewDropdownOpen()) {
+                <div class="profile-views-dropdown" role="dialog" aria-label="Profile Views">
+                  <div class="profile-views-header">
+                    <span class="profile-views-title">Profile Views</span>
+                    <span class="profile-views-count">{{ profileViewCount() }} total</span>
+                  </div>
+                  <p class="profile-views-content">
+                    @if (profileViewCount() === 0) {
+                      No profile views yet.
+                    } @else {
+                      {{ profileViewCount() }} {{ profileViewCount() === 1 ? 'person has' : 'people have' }} viewed your portfolio.
+                    }
+                  </p>
+                  <button type="button" class="profile-views-analytics-link" (click)="goToProfileAnalytics()">
+                    <svg viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true">
+                      <path d="M8 12V4M4 8l4-4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    View full analytics
+                  </button>
+                </div>
+              }
+            </div>
+          }
+
           <!-- Notifications dropdown -->
           <div class="notif-container">
             <button type="button"
