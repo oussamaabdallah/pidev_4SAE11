@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Global exception handler. Returns standardized error envelope:
@@ -43,7 +42,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         List<String> details = ex.getBindingResult().getFieldErrors().stream()
                 .map(e -> e.getField() + ": " + e.getDefaultMessage())
-                .collect(Collectors.toList());
+                .toList();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(errorResponse("VALIDATION_ERROR", "Invalid request", details));
     }

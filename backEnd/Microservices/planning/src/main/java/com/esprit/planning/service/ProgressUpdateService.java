@@ -363,7 +363,7 @@ public class ProgressUpdateService {
                                         .orElse(0))
                         .build())
                 .sorted(Comparator.comparing(ProgressTrendPointDto::getDate))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /** Returns a time-bounded report for the project (update count, comments, average %, first/last update). Defaults to last 30 days if from/to null. */
@@ -376,7 +376,7 @@ public class ProgressUpdateService {
         LocalDateTime toDateTime = toEffective.plusDays(1).atStartOfDay(); // exclusive end
 
         List<ProgressUpdate> updates = progressUpdateRepository.findByProjectIdAndCreatedAtBetween(projectId, fromDateTime, toDateTime);
-        List<Long> updateIds = updates.stream().map(ProgressUpdate::getId).collect(Collectors.toList());
+        List<Long> updateIds = updates.stream().map(ProgressUpdate::getId).toList();
 
         long commentCount = updateIds.isEmpty() ? 0 : progressCommentRepository.countByProgressUpdate_IdIn(updateIds);
 
@@ -412,7 +412,7 @@ public class ProgressUpdateService {
     @Transactional(readOnly = true)
     public FreelancerProgressStatsDto getProgressStatisticsByFreelancer(Long freelancerId) {
         List<ProgressUpdate> updates = progressUpdateRepository.findByFreelancerId(freelancerId);
-        List<Long> updateIds = updates.stream().map(ProgressUpdate::getId).collect(Collectors.toList());
+        List<Long> updateIds = updates.stream().map(ProgressUpdate::getId).toList();
         long totalComments = updateIds.isEmpty() ? 0 : progressCommentRepository.countByProgressUpdate_IdIn(updateIds);
 
         double avgPct = updates.isEmpty() ? 0.0 : updates.stream()
@@ -444,7 +444,7 @@ public class ProgressUpdateService {
     @Transactional(readOnly = true)
     public ProjectProgressStatsDto getProgressStatisticsByProject(Long projectId) {
         List<ProgressUpdate> updates = progressUpdateRepository.findByProjectId(projectId);
-        List<Long> updateIds = updates.stream().map(ProgressUpdate::getId).collect(Collectors.toList());
+        List<Long> updateIds = updates.stream().map(ProgressUpdate::getId).toList();
         long commentCount = updateIds.isEmpty() ? 0 : progressCommentRepository.countByProgressUpdate_IdIn(updateIds);
 
         Integer currentProgressPercentage = updates.stream()
@@ -475,7 +475,7 @@ public class ProgressUpdateService {
     @Transactional(readOnly = true)
     public ContractProgressStatsDto getProgressStatisticsByContract(Long contractId) {
         List<ProgressUpdate> updates = progressUpdateRepository.findByContractId(contractId);
-        List<Long> updateIds = updates.stream().map(ProgressUpdate::getId).collect(Collectors.toList());
+        List<Long> updateIds = updates.stream().map(ProgressUpdate::getId).toList();
         long commentCount = updateIds.isEmpty() ? 0 : progressCommentRepository.countByProgressUpdate_IdIn(updateIds);
 
         Integer currentProgressPercentage = updates.stream()
@@ -506,7 +506,7 @@ public class ProgressUpdateService {
     @Transactional(readOnly = true)
     public DashboardStatsDto getDashboardStatistics() {
         List<ProgressUpdate> all = progressUpdateRepository.findAll();
-        List<Long> updateIds = all.stream().map(ProgressUpdate::getId).collect(Collectors.toList());
+        List<Long> updateIds = all.stream().map(ProgressUpdate::getId).toList();
         long totalComments = updateIds.isEmpty() ? 0 : progressCommentRepository.countByProgressUpdate_IdIn(updateIds);
 
         double avgPct = all.isEmpty() ? 0.0 : all.stream()
@@ -549,7 +549,7 @@ public class ProgressUpdateService {
                             .lastUpdateAt(latest.getUpdatedAt())
                             .build();
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /** Returns lightweight summary for multiple contracts. Each contract gets currentProgress%, lastUpdateAt. */
@@ -578,7 +578,7 @@ public class ProgressUpdateService {
                             .lastUpdateAt(latest.getUpdatedAt())
                             .build();
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /** Returns per-freelancer projects summary: projects they have updates on, with latest % and date. */
@@ -599,7 +599,7 @@ public class ProgressUpdateService {
                             .lastUpdateAt(latest.getUpdatedAt())
                             .build();
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -639,7 +639,7 @@ public class ProgressUpdateService {
                             .orElse(null);
                     return new StalledProjectDto(projectId, lastUpdateAt, lastProgressPercentage);
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // --- Rankings (section 5) ---
@@ -656,7 +656,7 @@ public class ProgressUpdateService {
                     long commentCount = progressCommentRepository.countByProgressUpdate_FreelancerId(freelancerId);
                     return new FreelancerActivityDto(freelancerId, updateCount, commentCount);
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -669,6 +669,6 @@ public class ProgressUpdateService {
                 fromDateTime, toDateTime, pageable);
         return rows.stream()
                 .map(row -> new ProjectActivityDto((Long) row[0], (Long) row[1]))
-                .collect(Collectors.toList());
+                .toList();
     }
 }

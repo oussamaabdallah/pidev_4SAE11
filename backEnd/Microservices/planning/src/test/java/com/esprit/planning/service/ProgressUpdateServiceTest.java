@@ -140,7 +140,7 @@ class ProgressUpdateServiceTest {
 
         assertThat(result.isValid()).isTrue();
         assertThat(result.getErrors()).isEmpty();
-        assertThat(result.getMinAllowed()).isEqualTo(0);
+        assertThat(result.getMinAllowed()).isZero();
         assertThat(result.getProvided()).isEqualTo(50);
     }
 
@@ -409,7 +409,7 @@ class ProgressUpdateServiceTest {
         var result = progressUpdateService.getProgressReportForProject(1L, null, null);
 
         assertThat(result.getProjectId()).isEqualTo(1L);
-        assertThat(result.getUpdateCount()).isEqualTo(0);
+        assertThat(result.getUpdateCount()).isZero();
     }
 
     @Test

@@ -45,6 +45,8 @@ import java.util.Optional;
 @Tag(name = "Progress Updates", description = "Create and manage progress updates for projects")
 public class ProgressUpdateController {
 
+    private static final String RESPONSE_MESSAGE_KEY = "message";
+
     private final ProgressUpdateService progressUpdateService;
     private final ProgressCommentService progressCommentService;
 
@@ -240,19 +242,20 @@ public class ProgressUpdateController {
             description = "Returns lightweight summary (currentProgress%, lastUpdateAt) for multiple projects or contracts in one call. Use projectIds or contractIds query parameter (comma-separated)."
     )
     @ApiResponse(responseCode = "200", description = "Success")
-    public ResponseEntity<?> getSummary(
+    public ResponseEntity<Object> getSummary(
             @Parameter(description = "Comma-separated project IDs (e.g. 1,2,3)") @RequestParam(value = "projectIds", required = false) String projectIdsParam,
             @Parameter(description = "Comma-separated contract IDs (e.g. 1,2,3)") @RequestParam(value = "contractIds", required = false) String contractIdsParam
     ) {
         if (projectIdsParam != null && !projectIdsParam.isBlank()) {
             List<Long> ids = parseIds(projectIdsParam);
-            return ResponseEntity.ok(progressUpdateService.getSummaryByProjectIds(ids));
+            return ResponseEntity.ok().body((Object) progressUpdateService.getSummaryByProjectIds(ids));
         }
         if (contractIdsParam != null && !contractIdsParam.isBlank()) {
             List<Long> ids = parseIds(contractIdsParam);
-            return ResponseEntity.ok(progressUpdateService.getSummaryByContractIds(ids));
+            return ResponseEntity.ok().body((Object) progressUpdateService.getSummaryByContractIds(ids));
         }
-        return ResponseEntity.badRequest().body(Map.of("message", "Exactly one of projectIds or contractIds must be provided"));
+        return ResponseEntity.badRequest()
+                .body((Object) Map.of(RESPONSE_MESSAGE_KEY, "Exactly one of projectIds or contractIds must be provided"));
     }
 
     /** Returns per-freelancer projects summary: projects they have updates on, with latest % and date. */
@@ -287,7 +290,7 @@ public class ProgressUpdateController {
             @ApiResponse(responseCode = "400", description = "Invalid query parameters", content = @Content),
             @ApiResponse(responseCode = "404", description = "No matching progress update found", content = @Content)
     })
-    public ResponseEntity<?> getLatest(
+    public ResponseEntity<Object> getLatest(
             @Parameter(description = "Project ID")
             @RequestParam(value = "projectId", required = false) Long projectId,
             @Parameter(description = "Freelancer ID")
@@ -299,8 +302,8 @@ public class ProgressUpdateController {
                 + (freelancerId != null ? 1 : 0)
                 + (contractId != null ? 1 : 0);
         if (nonNullCount != 1) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Exactly one of projectId, freelancerId or contractId must be provided"
+            return ResponseEntity.badRequest().body((Object) Map.of(
+                    RESPONSE_MESSAGE_KEY, "Exactly one of projectId, freelancerId or contractId must be provided"
             ));
         }
 
@@ -313,9 +316,10 @@ public class ProgressUpdateController {
             result = progressUpdateService.findLatestByContractId(contractId);
         }
 
-        return result.<ResponseEntity<?>>map(ResponseEntity::ok)
+        return result
+                .map(u -> ResponseEntity.ok().body((Object) u))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("message", "No progress update found for the provided criteria")));
+                        .body((Object) Map.of(RESPONSE_MESSAGE_KEY, "No progress update found for the provided criteria")));
     }
 
     /** Returns progress trend points (date, progress %) for the project in the given date range; defaults to last 30 days if from/to omitted. */
@@ -440,14 +444,15 @@ public class ProgressUpdateController {
             @ApiResponse(responseCode = "200", description = "Success"),
             @ApiResponse(responseCode = "400", description = "Missing projectId", content = @Content)
     })
-    public ResponseEntity<?> getNextAllowedPercentage(
+    public ResponseEntity<Object> getNextAllowedPercentage(
             @Parameter(description = "Project ID", required = true) @RequestParam(required = false) Long projectId
     ) {
         if (projectId == null) {
-            return ResponseEntity.badRequest().body(Map.of("message", "projectId is required"));
+            return ResponseEntity.badRequest()
+                    .body((Object) Map.of(RESPONSE_MESSAGE_KEY, "projectId is required"));
         }
         Integer minAllowed = progressUpdateService.getNextAllowedPercentageForProject(projectId);
-        return ResponseEntity.ok(Map.of(
+        return ResponseEntity.ok().body((Object) Map.of(
                 "projectId", projectId,
                 "minAllowed", minAllowed
         ));

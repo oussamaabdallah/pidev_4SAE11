@@ -26,8 +26,7 @@ class GlobalExceptionHandlerTest {
         assertThat(result.getBody()).containsKey("error");
         @SuppressWarnings("unchecked")
         Map<String, Object> error = (Map<String, Object>) result.getBody().get("error");
-        assertThat(error).containsKey("code");
-        assertThat(error.get("code")).isEqualTo("NOT_FOUND");
+        assertThat(error).containsEntry("code", "NOT_FOUND");
         assertThat(error.get("message")).asString().contains("ProgressUpdate not found");
         assertThat(error.get("message")).asString().contains("999");
     }
