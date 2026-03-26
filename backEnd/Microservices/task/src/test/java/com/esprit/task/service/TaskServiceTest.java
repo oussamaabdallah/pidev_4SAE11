@@ -420,7 +420,7 @@ class TaskServiceTest {
 
         TaskStatsDto result = taskService.getStatsByProject(1L);
 
-        assertThat(result.getTotalTasks()).isEqualTo(0);
+        assertThat(result.getTotalTasks()).isZero();
         assertThat(result.getCompletionPercentage()).isEqualTo(0.0);
     }
 
