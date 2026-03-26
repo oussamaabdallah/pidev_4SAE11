@@ -1,5 +1,6 @@
 package com.esprit.planning.controller;
 
+import com.esprit.planning.dto.ProgressSummaryItemDto;
 import com.esprit.planning.dto.ProgressTrendPointDto;
 import com.esprit.planning.dto.ProgressUpdateRequest;
 import com.esprit.planning.dto.ProgressUpdateValidationResponse;
@@ -177,6 +178,48 @@ class ProgressUpdateControllerTest {
         mockMvc.perform(get("/api/progress-updates/freelancer/10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].freelancerId").value(10));
+    }
+
+    @Test
+    void getSummary_withProjectIds_returnsList() throws Exception {
+        when(progressUpdateService.getSummaryByProjectIds(anyList())).thenReturn(List.of(
+                ProgressSummaryItemDto.builder().projectId(1L).currentProgressPercentage(72).build()));
+
+        mockMvc.perform(get("/api/progress-updates/summary").param("projectIds", "1, 2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].projectId").value(1))
+                .andExpect(jsonPath("$[0].currentProgressPercentage").value(72));
+        verify(progressUpdateService).getSummaryByProjectIds(List.of(1L, 2L));
+    }
+
+    @Test
+    void getSummary_withContractIds_returnsList() throws Exception {
+        when(progressUpdateService.getSummaryByContractIds(anyList())).thenReturn(List.of(
+                ProgressSummaryItemDto.builder().contractId(5L).projectId(9L).currentProgressPercentage(40).build()));
+
+        mockMvc.perform(get("/api/progress-updates/summary").param("contractIds", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].contractId").value(5));
+        verify(progressUpdateService).getSummaryByContractIds(List.of(5L));
+    }
+
+    @Test
+    void getSummary_missingParams_returns400() throws Exception {
+        mockMvc.perform(get("/api/progress-updates/summary"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("projectIds or contractIds")));
+    }
+
+    @Test
+    void getFreelancerProjectsSummary_returnsList() throws Exception {
+        when(progressUpdateService.getFreelancerProjectsSummary(7L)).thenReturn(List.of(
+                ProgressSummaryItemDto.builder().projectId(3L).currentProgressPercentage(88).build()));
+
+        mockMvc.perform(get("/api/progress-updates/freelancer/7/projects-summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].projectId").value(3))
+                .andExpect(jsonPath("$[0].currentProgressPercentage").value(88));
+        verify(progressUpdateService).getFreelancerProjectsSummary(7L);
     }
 
     @Test

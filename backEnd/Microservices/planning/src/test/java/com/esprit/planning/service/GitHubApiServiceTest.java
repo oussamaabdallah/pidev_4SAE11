@@ -5,6 +5,7 @@ import com.esprit.planning.dto.GitHubCommitDto;
 import com.esprit.planning.dto.GitHubIssueRequest;
 import com.esprit.planning.dto.GitHubIssueResponseDto;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -12,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,6 +49,15 @@ class GitHubApiServiceTest {
     @Test
     void isEnabled_whenTokenHasSpaces_trimmedAndEnabled() {
         GitHubApiService service = new GitHubApiService(mock(RestTemplate.class), "  token  ", "", true);
+        assertThat(service.isEnabled()).isTrue();
+    }
+
+    @Test
+    void isEnabled_whenTokenReadFromFile_returnsTrue(@TempDir Path dir) throws Exception {
+        Path tokenFile = dir.resolve("github-token.txt");
+        Files.writeString(tokenFile, "ghp_from_file_token\n");
+        GitHubApiService service = new GitHubApiService(
+                mock(RestTemplate.class), "", tokenFile.toAbsolutePath().toString(), true);
         assertThat(service.isEnabled()).isTrue();
     }
 

@@ -13,7 +13,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -484,6 +487,224 @@ class ProgressUpdateServiceTest {
 
         verify(projectDeadlineSyncRepository).findByProjectId(1L);
         verify(projectClient, never()).getProjectById(any());
+    }
+
+    @Test
+    void findAllFiltered_returnsPageFromRepository() {
+        Pageable pageable = PageRequest.of(0, 20);
+        ProgressUpdate u = progressUpdate(1L, 1L, 10L, "T", 50);
+        when(progressUpdateRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(u)));
+
+        Page<ProgressUpdate> result = progressUpdateService.findAllFiltered(
+                Optional.of(1L), Optional.empty(), Optional.empty(),
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
+                pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getId()).isEqualTo(1L);
+        verify(progressUpdateRepository).findAll(any(Specification.class), eq(pageable));
+    }
+
+    @Test
+    void create_notifiesClientWhenProjectHasClientId() {
+        when(progressUpdateRepository.findByProjectId(1L)).thenReturn(List.of());
+        ProgressUpdate toCreate = progressUpdate(null, 1L, 10L, "New", 25);
+        ProgressUpdate saved = progressUpdate(1L, 1L, 10L, "New", 25);
+        when(progressUpdateRepository.save(any(ProgressUpdate.class))).thenReturn(saved);
+        when(projectClient.getProjectById(1L)).thenReturn(new ProjectDto(1L, 99L, "Proj", null));
+
+        progressUpdateService.create(toCreate);
+
+        verify(planningNotificationService, atLeastOnce()).notifyUser(
+                eq("99"), eq("New progress update"), eq("New"), eq(PlanningNotificationService.TYPE_PROGRESS_UPDATE), any());
+    }
+
+    @Test
+    void create_skipsClientNotificationWhenFreelancerIsClient() {
+        when(progressUpdateRepository.findByProjectId(1L)).thenReturn(List.of());
+        ProgressUpdate toCreate = progressUpdate(null, 1L, 10L, "Solo", 30);
+        ProgressUpdate saved = progressUpdate(1L, 1L, 10L, "Solo", 30);
+        when(progressUpdateRepository.save(any(ProgressUpdate.class))).thenReturn(saved);
+        when(projectClient.getProjectById(1L)).thenReturn(new ProjectDto(1L, 10L, "Proj", null));
+
+        progressUpdateService.create(toCreate);
+
+        verify(planningNotificationService, never()).notifyUser(eq("10"), anyString(), anyString(), anyString(), any());
+    }
+
+    @Test
+    void create_withProgress100_triggersMilestoneAsyncAndFreelancerNotify() {
+        when(progressUpdateRepository.findByProjectId(1L)).thenReturn(List.of());
+        ProgressUpdate toCreate = progressUpdate(null, 1L, 10L, "Done", 100);
+        ProgressUpdate saved = progressUpdate(1L, 1L, 10L, "Done", 100);
+        when(progressUpdateRepository.save(any(ProgressUpdate.class))).thenReturn(saved);
+        when(projectClient.getProjectById(1L)).thenReturn(new ProjectDto(1L, 200L, "P", null));
+
+        progressUpdateService.create(toCreate);
+
+        verify(googleCalendarService).createEventAsync(isNull(), contains("100%"), any(), any(), anyString());
+        verify(planningNotificationService, atLeastOnce()).notifyUser(
+                eq("10"), eq("Milestone reached"), contains("100%"), eq(PlanningNotificationService.TYPE_CALENDAR_MILESTONE), any());
+    }
+
+    @Test
+    void create_withNextUpdateDue_syncsCalendarEventAndNotifiesFreelancer() {
+        when(progressUpdateRepository.findByProjectId(1L)).thenReturn(List.of());
+        LocalDateTime nextDue = LocalDateTime.now().plusDays(3);
+        ProgressUpdate toCreate = progressUpdate(null, 1L, 10L, "With due", 40);
+        toCreate.setNextUpdateDue(nextDue);
+        when(progressUpdateRepository.save(any(ProgressUpdate.class))).thenAnswer(inv -> {
+            ProgressUpdate p = inv.getArgument(0);
+            if (p.getId() == null) {
+                p.setId(1L);
+            }
+            return p;
+        });
+        when(googleCalendarService.createEvent(isNull(), anyString(), any(), any(), anyString()))
+                .thenReturn(Optional.of("cal-next-1"));
+        when(projectClient.getProjectById(1L)).thenReturn(new ProjectDto(1L, 300L, "P", null));
+
+        progressUpdateService.create(toCreate);
+
+        verify(googleCalendarService).createEvent(isNull(), contains("Next progress update due"), eq(nextDue), any(), anyString());
+        verify(planningNotificationService, atLeastOnce()).notifyUser(
+                eq("10"), eq("Calendar reminder"), contains("Next progress update due"),
+                eq(PlanningNotificationService.TYPE_CALENDAR_REMINDER), any());
+    }
+
+    @Test
+    void update_withChangedNextDue_deletesOldCalendarEvent() {
+        LocalDateTime oldDue = LocalDateTime.now().minusDays(1);
+        LocalDateTime newDue = LocalDateTime.now().plusDays(5);
+        ProgressUpdate existing = progressUpdate(1L, 1L, 10L, "E", 50);
+        existing.setNextUpdateDue(oldDue);
+        existing.setNextDueCalendarEventId("old-event");
+        ProgressUpdate payload = progressUpdate(1L, 1L, 10L, "E", 55);
+        payload.setNextUpdateDue(newDue);
+        when(progressUpdateRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(progressUpdateRepository.findByProjectId(1L)).thenReturn(List.of(existing));
+        when(progressUpdateRepository.save(any(ProgressUpdate.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(googleCalendarService.createEvent(isNull(), anyString(), any(), any(), anyString()))
+                .thenReturn(Optional.of("new-event"));
+        when(projectClient.getProjectById(1L)).thenReturn(new ProjectDto(1L, 400L, "P", null));
+
+        progressUpdateService.update(1L, payload);
+
+        verify(googleCalendarService).deleteEventAsync(isNull(), eq("old-event"));
+        verify(googleCalendarService).createEvent(isNull(), anyString(), eq(newDue), any(), anyString());
+    }
+
+    @Test
+    void deleteById_deletesNextDueCalendarEventWhenPresent() {
+        ProgressUpdate existing = progressUpdate(1L, 1L, 10L, "Del", 50);
+        existing.setNextDueCalendarEventId("evt-to-delete");
+        when(progressUpdateRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(projectClient.getProjectById(1L)).thenReturn(new ProjectDto(1L, 77L, "P", null));
+
+        progressUpdateService.deleteById(1L);
+
+        verify(googleCalendarService).deleteEventAsync(isNull(), eq("evt-to-delete"));
+        verify(progressUpdateRepository).deleteById(1L);
+        verify(planningNotificationService).notifyUser(
+                eq("77"), eq("Progress update removed"), eq("Del"), eq(PlanningNotificationService.TYPE_PROGRESS_UPDATE), any());
+    }
+
+    @Test
+    void getSummaryByProjectIds_nullOrEmpty_returnsEmpty() {
+        assertThat(progressUpdateService.getSummaryByProjectIds(null)).isEmpty();
+        assertThat(progressUpdateService.getSummaryByProjectIds(List.of())).isEmpty();
+    }
+
+    @Test
+    void getSummaryByProjectIds_returnsLatestProgressPerProject() {
+        LocalDateTime older = LocalDateTime.now().minusDays(2);
+        LocalDateTime newer = LocalDateTime.now();
+        ProgressUpdate u1 = progressUpdate(1L, 1L, 10L, "A", 40);
+        u1.setUpdatedAt(older);
+        ProgressUpdate u2 = progressUpdate(2L, 1L, 10L, "B", 65);
+        u2.setUpdatedAt(newer);
+        when(progressUpdateRepository.findByProjectIdIn(List.of(1L))).thenReturn(List.of(u1, u2));
+
+        List<ProgressSummaryItemDto> result = progressUpdateService.getSummaryByProjectIds(List.of(1L));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getProjectId()).isEqualTo(1L);
+        assertThat(result.get(0).getCurrentProgressPercentage()).isEqualTo(65);
+        assertThat(result.get(0).getLastUpdateAt()).isEqualTo(newer);
+    }
+
+    @Test
+    void getSummaryByProjectIds_whenNoUpdatesForId_returnsNullProgress() {
+        when(progressUpdateRepository.findByProjectIdIn(List.of(9L))).thenReturn(List.of());
+
+        List<ProgressSummaryItemDto> result = progressUpdateService.getSummaryByProjectIds(List.of(9L));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getProjectId()).isEqualTo(9L);
+        assertThat(result.get(0).getCurrentProgressPercentage()).isNull();
+        assertThat(result.get(0).getLastUpdateAt()).isNull();
+    }
+
+    @Test
+    void getSummaryByContractIds_nullOrEmpty_returnsEmpty() {
+        assertThat(progressUpdateService.getSummaryByContractIds(null)).isEmpty();
+        assertThat(progressUpdateService.getSummaryByContractIds(List.of())).isEmpty();
+    }
+
+    @Test
+    void getSummaryByContractIds_returnsLatestPerContract() {
+        ProgressUpdate u1 = progressUpdateWithContract(1L, 1L, 5L, 10L, "C1", 30);
+        u1.setUpdatedAt(LocalDateTime.now().minusDays(1));
+        ProgressUpdate u2 = progressUpdateWithContract(2L, 1L, 5L, 10L, "C2", 80);
+        u2.setUpdatedAt(LocalDateTime.now());
+        when(progressUpdateRepository.findByContractIdIn(List.of(5L))).thenReturn(List.of(u1, u2));
+
+        List<ProgressSummaryItemDto> result = progressUpdateService.getSummaryByContractIds(List.of(5L));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getContractId()).isEqualTo(5L);
+        assertThat(result.get(0).getCurrentProgressPercentage()).isEqualTo(80);
+        assertThat(result.get(0).getProjectId()).isEqualTo(1L);
+    }
+
+    @Test
+    void getFreelancerProjectsSummary_groupsByProjectWithLatestUpdate() {
+        ProgressUpdate u1 = progressUpdate(1L, 10L, 5L, "Old", 20);
+        u1.setUpdatedAt(LocalDateTime.now().minusDays(3));
+        ProgressUpdate u2 = progressUpdate(2L, 10L, 5L, "New", 55);
+        u2.setUpdatedAt(LocalDateTime.now());
+        ProgressUpdate other = progressUpdate(3L, 99L, 5L, "Other", 90);
+        other.setUpdatedAt(LocalDateTime.now());
+        when(progressUpdateRepository.findByFreelancerId(5L)).thenReturn(List.of(u1, u2, other));
+
+        List<ProgressSummaryItemDto> result = progressUpdateService.getFreelancerProjectsSummary(5L);
+
+        assertThat(result).hasSize(2);
+        assertThat(result.stream().filter(i -> i.getProjectId().equals(10L)).findFirst())
+                .hasValueSatisfying(i -> assertThat(i.getCurrentProgressPercentage()).isEqualTo(55));
+    }
+
+    @Test
+    void ensureProjectDeadlineInCalendarForUser_createsEventAndSyncWhenDeadlinePresent() {
+        when(projectDeadlineSyncRepository.findByProjectId(2L)).thenReturn(Optional.empty());
+        LocalDateTime deadline = LocalDateTime.now().plusWeeks(2);
+        when(projectClient.getProjectById(2L)).thenReturn(new ProjectDto(2L, 1L, "Big project", deadline));
+        when(googleCalendarService.createEvent(isNull(), anyString(), eq(deadline), any(), anyString()))
+                .thenReturn(Optional.of("deadline-cal-1"));
+
+        progressUpdateService.ensureProjectDeadlineInCalendarForUser(2L, 8L);
+
+        verify(projectDeadlineSyncRepository).save(any());
+        verify(planningNotificationService).notifyUser(
+                eq("8"), eq("Project deadline in calendar"), anyString(),
+                eq(PlanningNotificationService.TYPE_CALENDAR_DEADLINE), any());
+    }
+
+    private static ProgressUpdate progressUpdateWithContract(Long id, Long projectId, Long contractId, Long freelancerId, String title, int pct) {
+        ProgressUpdate u = progressUpdate(id, projectId, freelancerId, title, pct);
+        u.setContractId(contractId);
+        return u;
     }
 
     private static ProgressUpdate progressUpdate(Long id, Long projectId, Long freelancerId, String title, int pct) {
