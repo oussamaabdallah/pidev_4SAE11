@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -130,8 +131,7 @@ class TaskNotificationServiceTest {
         when(projectClient.getProjectById(1L)).thenReturn(project);
         when(notificationClient.create(any())).thenThrow(new RuntimeException("Service unavailable"));
 
-        taskNotificationService.notifyTaskStatusUpdate(t);
-
-        // Should not throw - failures are logged and swallowed
+        assertThatCode(() -> taskNotificationService.notifyTaskStatusUpdate(t))
+                .doesNotThrowAnyException();
     }
 }

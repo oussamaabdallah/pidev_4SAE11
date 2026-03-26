@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,13 +28,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ProgressCannotDecreaseException.class)
     public ResponseEntity<Map<String, Object>> handleProgressCannotDecrease(ProgressCannotDecreaseException ex) {
-        Map<String, Object> errorBody = new java.util.HashMap<>(errorResponse("VALIDATION_ERROR", ex.getMessage(),
-                List.of(Map.of("minAllowed", ex.getMinAllowed(), "provided", ex.getProvided()))));
-        @SuppressWarnings("unchecked")
-        Map<String, Object> error = (Map<String, Object>) errorBody.get("error");
+        Map<String, Object> error = new HashMap<>();
+        error.put("code", "VALIDATION_ERROR");
+        error.put("message", ex.getMessage());
+        error.put("details", List.of(Map.of("minAllowed", ex.getMinAllowed(), "provided", ex.getProvided())));
         error.put("minAllowed", ex.getMinAllowed());
         error.put("provided", ex.getProvided());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody);
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", error);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
