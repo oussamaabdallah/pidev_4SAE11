@@ -13,6 +13,9 @@
         <option value="$PROJECT_DIR$/Microservices/Project/pom.xml" />
         <option value="$PROJECT_DIR$/Microservices/planning/pom.xml" />
         <option value="$PROJECT_DIR$/Microservices/Evaluation/pom.xml" />
+        <option value="$PROJECT_DIR$/Microservices/Portfolio/pom.xml" />
+        <option value="$PROJECT_DIR$/Microservices/Contract/pom.xml" />
+        <option value="$PROJECT_DIR$/Microservices/Notification/pom.xml" />
       </list>
     </option>
   </component>

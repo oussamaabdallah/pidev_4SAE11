@@ -4,6 +4,8 @@ import tn.esprit.project.Dto.request.ProjectRequest;
 import tn.esprit.project.Dto.response.ProjectResponse;
 import tn.esprit.project.Entities.Project;
 
+import java.util.List;
+
 public class ProjectMapper {
     public static Project toEntity(ProjectRequest dto){
         Project p = new Project();
@@ -28,7 +30,7 @@ public class ProjectMapper {
                 p.getStatus().name(),
                 p.getCategory(),
                 p.getSkillIds(),
-                null
+                List.of()
         );
     }
 }

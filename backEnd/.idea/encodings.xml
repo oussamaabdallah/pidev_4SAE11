@@ -3,8 +3,11 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/Eureka/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/KeyCloak/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Microservices/Contract/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Microservices/Evaluation/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Microservices/Notification/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Microservices/Offer/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Microservices/Portfolio/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Microservices/Project/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Microservices/planning/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Microservices/review/src/main/java" charset="UTF-8" />
