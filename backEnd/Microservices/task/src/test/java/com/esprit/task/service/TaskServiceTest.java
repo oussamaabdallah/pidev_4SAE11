@@ -441,4 +441,67 @@ class TaskServiceTest {
         verify(taskRepository).delete(sub);
         verify(taskRepository).delete(parent);
     }
+
+    @Test
+    void escalateOverduePriorities_setsHighAndNotifiesAssignee() {
+        Task overdue = task(1L);
+        overdue.setPriority(TaskPriority.LOW);
+        overdue.setDueDate(LocalDate.now().minusDays(1));
+        overdue.setAssigneeId(5L);
+        when(taskRepository.findOverdueTasks(any(LocalDate.class))).thenReturn(List.of(overdue));
+        when(taskRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        int n = taskService.escalateOverduePriorities();
+
+        assertThat(n).isEqualTo(1);
+        assertThat(overdue.getPriority()).isEqualTo(TaskPriority.HIGH);
+        verify(taskNotificationService).notifyTaskPriorityEscalated(overdue);
+    }
+
+    @Test
+    void escalateOverduePriorities_withoutAssignee_skipsNotification() {
+        Task overdue = task(1L);
+        overdue.setPriority(TaskPriority.MEDIUM);
+        overdue.setDueDate(LocalDate.now().minusDays(1));
+        overdue.setAssigneeId(null);
+        when(taskRepository.findOverdueTasks(any(LocalDate.class))).thenReturn(List.of(overdue));
+        when(taskRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        taskService.escalateOverduePriorities();
+
+        verify(taskNotificationService, never()).notifyTaskPriorityEscalated(any());
+        assertThat(overdue.getPriority()).isEqualTo(TaskPriority.HIGH);
+    }
+
+    @Test
+    void purgeOldCancelledTasks_deletesWhenExists() {
+        Task old = task(1L);
+        old.setStatus(TaskStatus.CANCELLED);
+        old.setUpdatedAt(LocalDateTime.now().minusDays(100));
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(90);
+        when(taskRepository.findByStatusAndUpdatedAtBefore(TaskStatus.CANCELLED, cutoff)).thenReturn(List.of(old));
+        when(taskRepository.existsById(1L)).thenReturn(true);
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(old));
+        when(taskRepository.findByParentTaskId(1L)).thenReturn(List.of());
+        when(taskCommentRepository.findByTaskIdOrderByCreatedAtAsc(1L)).thenReturn(List.of());
+
+        int n = taskService.purgeOldCancelledTasks(cutoff);
+
+        assertThat(n).isEqualTo(1);
+        verify(taskRepository).delete(old);
+    }
+
+    @Test
+    void purgeOldCancelledTasks_skipsWhenAlreadyRemoved() {
+        Task old = task(1L);
+        old.setStatus(TaskStatus.CANCELLED);
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(90);
+        when(taskRepository.findByStatusAndUpdatedAtBefore(TaskStatus.CANCELLED, cutoff)).thenReturn(List.of(old));
+        when(taskRepository.existsById(1L)).thenReturn(false);
+
+        int n = taskService.purgeOldCancelledTasks(cutoff);
+
+        assertThat(n).isZero();
+        verify(taskRepository, never()).delete(any(Task.class));
+    }
 }

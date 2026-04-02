@@ -154,6 +154,9 @@ public class ProgressUpdateService {
         }
         LocalDateTime previousNextDue = existing.getNextUpdateDue();
         String previousEventId = existing.getNextDueCalendarEventId();
+        if (!Objects.equals(previousNextDue, updated.getNextUpdateDue())) {
+            existing.setNextDueOverdueNotified(false);
+        }
         existing.setProjectId(updated.getProjectId());
         existing.setContractId(updated.getContractId());
         existing.setFreelancerId(updated.getFreelancerId());

@@ -27,6 +27,8 @@ public class PlanningNotificationService {
     public static final String TYPE_CALENDAR_REMINDER = "CALENDAR_REMINDER";
     /** Calendar: milestone (e.g. 100%) reached */
     public static final String TYPE_CALENDAR_MILESTONE = "CALENDAR_MILESTONE";
+    /** Scheduled: next progress update due date is overdue */
+    public static final String TYPE_PROGRESS_NEXT_DUE_OVERDUE = "PROGRESS_NEXT_DUE_OVERDUE";
 
     /**
      * Notify a user. Catches and logs any exception so Planning is not affected if Notification is down.

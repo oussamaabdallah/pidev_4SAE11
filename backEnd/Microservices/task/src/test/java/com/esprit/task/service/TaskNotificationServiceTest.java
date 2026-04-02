@@ -125,6 +125,30 @@ class TaskNotificationServiceTest {
     }
 
     @Test
+    void notifyTaskPriorityEscalated_callsClientForAssignee() {
+        Task t = task(1L);
+        t.setAssigneeId(42L);
+        ArgumentCaptor<com.esprit.task.dto.NotificationRequestDto> captor =
+                ArgumentCaptor.forClass(com.esprit.task.dto.NotificationRequestDto.class);
+
+        taskNotificationService.notifyTaskPriorityEscalated(t);
+
+        verify(notificationClient).create(captor.capture());
+        assertThat(captor.getValue().getUserId()).isEqualTo("42");
+        assertThat(captor.getValue().getType()).isEqualTo(TaskNotificationService.TYPE_TASK_PRIORITY_ESCALATED);
+        assertThat(captor.getValue().getData()).containsEntry("projectId", "1").containsEntry("taskId", "1");
+        verify(projectClient, never()).getProjectById(any());
+    }
+
+    @Test
+    void notifyTaskPriorityEscalated_whenAssigneeNull_doesNotCallClient() {
+        Task t = task(1L);
+        t.setAssigneeId(null);
+        taskNotificationService.notifyTaskPriorityEscalated(t);
+        verify(notificationClient, never()).create(any());
+    }
+
+    @Test
     void notifyTaskStatusUpdate_whenNotificationClientThrows_doesNotPropagate() {
         Task t = task(1L);
         ProjectDto project = new ProjectDto(1L, 100L, "Project A", null);

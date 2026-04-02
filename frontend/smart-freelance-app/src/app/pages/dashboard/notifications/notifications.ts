@@ -118,6 +118,8 @@ export class Notifications implements OnInit {
     if (type === 'PROGRESS_COMMENT') return 'Comment';
     if (type === 'REVIEW_RESPONSE') return 'Review response';
     if (type === 'TASK_STATUS_UPDATE') return 'Task update';
+    if (type === 'TASK_PRIORITY_ESCALATED') return 'Task priority';
+    if (type === 'PROGRESS_NEXT_DUE_OVERDUE') return 'Progress due overdue';
     return type || 'Notification';
   }
 }

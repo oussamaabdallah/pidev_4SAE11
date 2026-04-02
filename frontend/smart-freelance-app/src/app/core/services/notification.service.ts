@@ -56,7 +56,8 @@ export class NotificationService {
    * Returns the dashboard route + query params for a notification.
    * TASK_STATUS_UPDATE → project-tasks?projectId=X (client sees task board).
    * REVIEW_RESPONSE → reviews/about-me (reviewee sees new response to their review).
-   * PROGRESS_UPDATE / PROGRESS_COMMENT → track-progress or progress-updates?projectId=X.
+   * PROGRESS_UPDATE / PROGRESS_COMMENT / PROGRESS_NEXT_DUE_OVERDUE → track-progress or progress-updates?projectId=X.
+   * TASK_PRIORITY_ESCALATED → my-tasks (assignee).
    */
   getNotificationRoute(
     n: NotificationItem,
@@ -69,6 +70,16 @@ export class NotificationService {
     if (type === 'TASK_STATUS_UPDATE') {
       const route = '/dashboard/project-tasks';
       return projectId ? { route, queryParams: { projectId } } : { route, queryParams: {} };
+    }
+
+    if (type === 'TASK_PRIORITY_ESCALATED') {
+      const route = '/dashboard/my-tasks';
+      return projectId ? { route, queryParams: { projectId } } : { route, queryParams: {} };
+    }
+
+    if (type === 'PROGRESS_NEXT_DUE_OVERDUE') {
+      const base = isClient ? '/dashboard/track-progress' : '/dashboard/progress-updates';
+      return projectId ? { route: base, queryParams: { projectId } } : { route: base, queryParams: {} };
     }
 
     if (type === 'REVIEW_RESPONSE') {

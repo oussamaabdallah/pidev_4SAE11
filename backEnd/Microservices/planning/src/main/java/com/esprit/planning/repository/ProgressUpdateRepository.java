@@ -4,6 +4,7 @@ import com.esprit.planning.entity.ProgressUpdate;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -67,4 +68,11 @@ public interface ProgressUpdateRepository extends JpaRepository<ProgressUpdate, 
     /** Distinct project IDs for which the given user has progress updates as freelancer (for calendar filtering). */
     @Query("SELECT DISTINCT p.projectId FROM ProgressUpdate p WHERE p.freelancerId = :freelancerId")
     List<Long> findDistinctProjectIdsByFreelancerId(@Param("freelancerId") Long freelancerId);
+
+    /** Overdue next-update-due rows not yet notified (scheduler). */
+    List<ProgressUpdate> findByNextUpdateDueIsNotNullAndNextUpdateDueBeforeAndNextDueOverdueNotifiedIsFalse(LocalDateTime now);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE ProgressUpdate p SET p.nextDueCalendarEventId = NULL WHERE p.nextUpdateDue IS NULL AND p.nextDueCalendarEventId IS NOT NULL")
+    int clearOrphanNextDueCalendarEventIds();
 }

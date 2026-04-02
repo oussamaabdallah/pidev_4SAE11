@@ -54,4 +54,6 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
     long countByProjectId(Long projectId);
 
     long countByProjectIdAndStatus(Long projectId, TaskStatus status);
+
+    List<Task> findByStatusAndUpdatedAtBefore(TaskStatus status, LocalDateTime before);
 }

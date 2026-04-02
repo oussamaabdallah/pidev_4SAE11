@@ -25,6 +25,7 @@ public class TaskNotificationService {
     private final ProjectClient projectClient;
 
     public static final String TYPE_TASK_STATUS_UPDATE = "TASK_STATUS_UPDATE";
+    public static final String TYPE_TASK_PRIORITY_ESCALATED = "TASK_PRIORITY_ESCALATED";
 
     /**
      * Notify the project client when a task's status was updated.
@@ -55,6 +56,25 @@ public class TaskNotificationService {
         data.put("taskId", String.valueOf(task.getId()));
 
         notifyUser(userId, title, body, TYPE_TASK_STATUS_UPDATE, data);
+    }
+
+    /**
+     * Notify the assignee when a scheduled job escalates an overdue task to HIGH priority.
+     */
+    public void notifyTaskPriorityEscalated(Task task) {
+        if (task == null || task.getAssigneeId() == null) {
+            return;
+        }
+        String userId = String.valueOf(task.getAssigneeId());
+        String taskTitle = task.getTitle() != null ? task.getTitle() : "Task #" + task.getId();
+        String title = "Task priority escalated";
+        String body = String.format(
+                "Overdue task \"%s\" was escalated to HIGH priority. Please update or complete it.",
+                taskTitle);
+        Map<String, String> data = new HashMap<>();
+        data.put("projectId", String.valueOf(task.getProjectId()));
+        data.put("taskId", String.valueOf(task.getId()));
+        notifyUser(userId, title, body, TYPE_TASK_PRIORITY_ESCALATED, data);
     }
 
     private void notifyUser(String userId, String title, String body, String type, Map<String, String> data) {

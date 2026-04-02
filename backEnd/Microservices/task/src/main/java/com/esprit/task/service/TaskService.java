@@ -259,4 +259,42 @@ public class TaskService {
         }
         taskRepository.delete(task);
     }
+
+    /**
+     * Scheduled: overdue open tasks with LOW/MEDIUM priority become HIGH; notifies assignee per escalated task.
+     */
+    @Transactional
+    public int escalateOverduePriorities() {
+        LocalDate today = LocalDate.now();
+        List<Task> overdue = taskRepository.findOverdueTasks(today);
+        int escalated = 0;
+        for (Task t : overdue) {
+            if (t.getPriority() == TaskPriority.LOW || t.getPriority() == TaskPriority.MEDIUM) {
+                t.setPriority(TaskPriority.HIGH);
+                taskRepository.save(t);
+                escalated++;
+                if (t.getAssigneeId() != null) {
+                    taskNotificationService.notifyTaskPriorityEscalated(t);
+                }
+            }
+        }
+        return escalated;
+    }
+
+    /**
+     * Scheduled: permanently remove CANCELLED tasks (and comments/subtasks) older than {@code cutoff}.
+     */
+    @Transactional
+    public int purgeOldCancelledTasks(LocalDateTime cutoff) {
+        List<Task> candidates = taskRepository.findByStatusAndUpdatedAtBefore(TaskStatus.CANCELLED, cutoff);
+        int removed = 0;
+        for (Task t : candidates) {
+            if (!taskRepository.existsById(t.getId())) {
+                continue;
+            }
+            deleteById(t.getId());
+            removed++;
+        }
+        return removed;
+    }
 }
