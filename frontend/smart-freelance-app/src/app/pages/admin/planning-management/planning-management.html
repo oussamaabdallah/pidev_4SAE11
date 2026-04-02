@@ -241,6 +241,8 @@
               <th scope="col" class="col-project">Project</th>
               <th scope="col" class="col-freelancer">Freelancer</th>
               <th scope="col" class="col-progress">Progress</th>
+              <th scope="col" class="col-next-due">Next due</th>
+              <th scope="col" class="col-due-status">Due status</th>
               <th scope="col" class="col-created">Created</th>
               <th scope="col" class="col-actions">Actions</th>
             </tr>
@@ -259,6 +261,18 @@
                     </div>
                     <span class="progress-cell__pct">{{ u.progressPercentage }}%</span>
                   </div>
+                </td>
+                <td class="col-next-due">
+                  @if (u.nextUpdateDue) {
+                    <span class="cell-date" [class.cell-date--overdue]="progressNextDueOverdue(u)">{{ u.nextUpdateDue | date:'short' }}</span>
+                  } @else {
+                    <span class="cell-meta">—</span>
+                  }
+                </td>
+                <td class="col-due-status">
+                  <span class="due-status-pill" [class.due-status-pill--overdue]="u.nextUpdateDue && progressNextDueOverdue(u)" [class.due-status-pill--notified]="u.nextDueOverdueNotified === true">
+                    {{ progressDueStatusLabel(u) }}
+                  </span>
                 </td>
                 <td class="col-created"><span class="cell-date">{{ u.createdAt | date:'short' }}</span></td>
                 <td class="col-actions">
@@ -469,6 +483,23 @@
             <span class="detail-label">Updated</span>
             <span class="detail-value">{{ showUpdate.updatedAt | date:'medium' }}</span>
           </div>
+          @if (showUpdate.nextUpdateDue) {
+            <div class="detail-row">
+              <span class="detail-label">Next update due</span>
+              <span class="detail-value">{{ showUpdate.nextUpdateDue | date:'medium' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Due status</span>
+              <span class="detail-value">
+                <span class="due-status-pill" [class.due-status-pill--overdue]="progressNextDueOverdue(showUpdate)" [class.due-status-pill--notified]="showUpdate.nextDueOverdueNotified === true">
+                  {{ progressDueStatusLabel(showUpdate) }}
+                </span>
+                @if (showUpdate.nextDueOverdueNotified === true) {
+                  <span class="detail-hint">Automatic overdue reminder was sent to the freelancer.</span>
+                }
+              </span>
+            </div>
+          }
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeShow()">Close</button>

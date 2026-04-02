@@ -99,6 +99,17 @@
                   <p class="update-desc">{{ u.description }}</p>
                 }
                 <p class="update-meta">Freelancer ID: {{ u.freelancerId }} · Updated {{ formatDate(u.updatedAt) }}</p>
+                @if (u.nextUpdateDue) {
+                  <p class="update-next-due" [class.update-next-due--overdue]="nextDueIsOverdue(u)">
+                    Next update due: {{ formatDate(u.nextUpdateDue) }}
+                    @if (nextDueIsOverdue(u)) {
+                      <span class="due-badge due-badge--overdue">Overdue</span>
+                    }
+                    @if (nextDueIsOverdue(u) && overdueReminderWasSentToFreelancer(u)) {
+                      <span class="due-badge due-badge--notified" title="The freelancer received an automatic overdue reminder">Freelancer notified</span>
+                    }
+                  </p>
+                }
                 @if (u.githubRepoUrl) {
                   @if (parseGithubRepoUrl(u.githubRepoUrl); as parsed) {
                     <a [routerLink]="['/dashboard/github']" [queryParams]="{ owner: parsed.owner, repo: parsed.repo }" class="repo-link">View repo history &amp; codebase on GitHub</a>

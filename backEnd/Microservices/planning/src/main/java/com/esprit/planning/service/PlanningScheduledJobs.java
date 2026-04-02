@@ -24,7 +24,7 @@ public class PlanningScheduledJobs {
     private final ProgressUpdateRepository progressUpdateRepository;
     private final PlanningNotificationService planningNotificationService;
 
-    @Scheduled(cron = "${planning.scheduler.overdue-cron:0 0 8 * * ?}")
+    @Scheduled(cron = "${planning.scheduler.overdue-cron:0 0 * * * ?}")
     @Transactional
     public void notifyOverdueNextProgressDue() {
         LocalDateTime now = LocalDateTime.now();

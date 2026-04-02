@@ -14,6 +14,7 @@ import {
   PageResponse,
   StalledProjectDto,
   CalendarEventDto,
+  isProgressNextDueOverdue,
 } from '../../../core/services/planning.service';
 import { Card } from '../../../shared/components/card/card';
 import { forkJoin, Subject, Subscription } from 'rxjs';
@@ -479,6 +480,14 @@ export class ProgressUpdates implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  nextDueIsOverdue(u: ProgressUpdate): boolean {
+    return isProgressNextDueOverdue(u);
+  }
+
+  overdueReminderWasSent(u: ProgressUpdate): boolean {
+    return u.nextDueOverdueNotified === true;
   }
 
   formatDate(s: string): string {

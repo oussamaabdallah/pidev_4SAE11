@@ -126,7 +126,7 @@ public class ProgressUpdateController {
         );
 
         StringBuilder sb = new StringBuilder();
-        sb.append("id,projectId,contractId,freelancerId,title,description,progressPercentage,createdAt,updatedAt,githubRepoUrl,commentCount\n");
+        sb.append("id,projectId,contractId,freelancerId,title,description,progressPercentage,createdAt,updatedAt,nextUpdateDue,nextDueOverdueNotified,githubRepoUrl,commentCount\n");
         for (ProgressUpdate update : result) {
             long commentCount = update.getComments() != null ? update.getComments().size() : 0;
             sb.append(csv(update.getId()))
@@ -138,6 +138,8 @@ public class ProgressUpdateController {
                     .append(',').append(csv(update.getProgressPercentage()))
                     .append(',').append(csv(update.getCreatedAt()))
                     .append(',').append(csv(update.getUpdatedAt()))
+                    .append(',').append(csv(update.getNextUpdateDue()))
+                    .append(',').append(csv(update.getNextDueOverdueNotified()))
                     .append(',').append(csv(update.getGithubRepoUrl()))
                     .append(',').append(csv(commentCount))
                     .append('\n');

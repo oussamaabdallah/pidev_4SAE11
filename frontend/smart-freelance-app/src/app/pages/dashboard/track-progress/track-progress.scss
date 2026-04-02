@@ -441,6 +441,45 @@
     color: $neutral-400;
     margin: $spacing-xs 0 0;
   }
+
+  .update-next-due {
+    font-size: $font-size-xs;
+    color: $primary-600;
+    margin: $spacing-xs 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $spacing-xs;
+
+    &--overdue {
+      color: $error-700;
+      font-weight: $font-weight-semibold;
+    }
+  }
+
+  .due-badge {
+    display: inline-block;
+    padding: 2px $spacing-sm;
+    font-size: 0.7rem;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    border-radius: $radius-full;
+    line-height: 1.2;
+
+    &--overdue {
+      background: rgba($error-500, 0.12);
+      color: $error-700;
+      border: 1px solid rgba($error-500, 0.35);
+    }
+
+    &--notified {
+      background: rgba($neutral-500, 0.12);
+      color: $neutral-700;
+      border: 1px solid rgba($neutral-500, 0.3);
+    }
+  }
+
   .repo-link {
     display: inline-block;
     margin-top: $spacing-sm;

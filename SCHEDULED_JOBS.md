@@ -13,7 +13,7 @@ Cron format used here (6 fields):
 
 | What it does (plain English) | When it runs (default) | What changes in the database | Notifications |
 |------------------------------|------------------------|------------------------------|---------------|
-| **Overdue “next progress update” reminder** | **Every day at 08:00:00** (`0 0 8 * * ?`) | For each progress row that has a **next update due date in the past** and has **not** been flagged yet: sets `nextDueOverdueNotified` to **true** (so we don’t spam the same overdue row every day). | **Yes** — sends a notification to the **freelancer** (type `PROGRESS_NEXT_DUE_OVERDUE`). The app’s notification list and header badge pick this up like any other notification. |
+| **Overdue “next progress update” reminder** | **Every hour on the hour** (`0 0 * * * ?`) | For each progress row that has a **next update due date in the past** and has **not** been flagged yet: sets `nextDueOverdueNotified` to **true** (so we don’t send duplicate notifications until the due date is updated). | **Yes** — sends a notification to the **freelancer** (type `PROGRESS_NEXT_DUE_OVERDUE`). The app’s notification list and header badge pick this up like any other notification. |
 | **Orphan Google Calendar ID cleanup** | **Every Sunday at 03:00:00** (`0 0 3 ? * SUN`) | Clears `nextDueCalendarEventId` when **`nextUpdateDue` is empty** but an old calendar event id was still stored (housekeeping after the due date was removed). | **No** |
 
 **Config properties (Planning):**

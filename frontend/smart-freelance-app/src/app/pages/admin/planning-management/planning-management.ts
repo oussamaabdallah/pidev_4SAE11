@@ -13,6 +13,7 @@ import {
   StalledProjectDto,
   FreelancerActivityDto,
   ProjectActivityDto,
+  isProgressNextDueOverdue,
 } from '../../../core/services/planning.service';
 import { UserService, User } from '../../../core/services/user.service';
 import { ProjectService, Project } from '../../../core/services/project.service';
@@ -449,6 +450,17 @@ export class PlanningManagement implements OnInit, OnDestroy {
     return this.projectIdToTitle[id] ?? `Project ${id}`;
   }
 
+  progressNextDueOverdue(u: ProgressUpdate): boolean {
+    return isProgressNextDueOverdue(u);
+  }
+
+  /** Short label for next-due scheduling / overdue reminder state (admin table). */
+  progressDueStatusLabel(u: ProgressUpdate): string {
+    if (!u.nextUpdateDue) return '—';
+    if (!isProgressNextDueOverdue(u)) return 'Scheduled';
+    return u.nextDueOverdueNotified ? 'Overdue · notified' : 'Overdue';
+  }
+
   /** Display label for user in dropdown: "FirstName LastName (#id)" */
   getFreelancerLabel(user: User): string {
     const name = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || `User ${user.id}`;
@@ -526,6 +538,9 @@ export class PlanningManagement implements OnInit, OnDestroy {
             'progressPercentage',
             'createdAt',
             'updatedAt',
+            'nextUpdateDue',
+            'nextDueOverdueNotified',
+            'githubRepoUrl',
           ];
           const csvLines = [header.join(',')];
           for (const u of rows) {
@@ -539,6 +554,9 @@ export class PlanningManagement implements OnInit, OnDestroy {
               u.progressPercentage,
               u.createdAt,
               u.updatedAt,
+              u.nextUpdateDue ?? '',
+              u.nextDueOverdueNotified === true ? 'true' : u.nextDueOverdueNotified === false ? 'false' : '',
+              u.githubRepoUrl ?? '',
             ]
               .map((val) => {
                 if (val === null || val === undefined) return '';

@@ -56,6 +56,10 @@
                 <span class="task-item__meta">{{ getProjectTitle(t.projectId) }} · Due {{ formatDueDate(t.dueDate) }}</span>
               </div>
               <div class="task-item__status">
+                <span
+                  class="priority-badge priority-badge--{{ effectivePriority(t.priority) | lowercase }}"
+                  [attr.title]="'Priority: ' + formatPriorityLabel(t.priority)"
+                >{{ formatPriorityLabel(t.priority) }}</span>
                 <span class="badge badge--{{ t.status | lowercase }}">{{ t.status }}</span>
                 @if (t.status !== 'DONE' && t.status !== 'CANCELLED') {
                   <div class="status-dropdown-wrap">

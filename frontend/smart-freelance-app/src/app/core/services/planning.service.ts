@@ -22,9 +22,18 @@ export interface ProgressUpdate {
   /** Optional next progress update due (synced to Google Calendar when enabled). */
   nextUpdateDue?: string | null;
   nextDueCalendarEventId?: string | null;
+  /** Set by the scheduler after an overdue reminder was sent (not user-editable). */
+  nextDueOverdueNotified?: boolean | null;
   /** Optional GitHub repository URL linked to this update (e.g. https://github.com/owner/repo). */
   githubRepoUrl?: string | null;
   comments?: ProgressComment[];
+}
+
+/** True when `nextUpdateDue` is set and before now (uses browser clock). */
+export function isProgressNextDueOverdue(u: Pick<ProgressUpdate, 'nextUpdateDue'>): boolean {
+  if (!u.nextUpdateDue) return false;
+  const t = new Date(u.nextUpdateDue).getTime();
+  return !Number.isNaN(t) && t < Date.now();
 }
 
 /** Comment on a progress update (client). Matches backend ProgressComment. */

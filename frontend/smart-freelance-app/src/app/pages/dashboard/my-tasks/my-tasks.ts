@@ -184,6 +184,22 @@ export class MyTasks implements OnInit, OnDestroy {
     return d ? new Date(d).toLocaleDateString() : '—';
   }
 
+  /** Human-readable priority for list badges (API uses LOW, MEDIUM, …). */
+  formatPriorityLabel(p: TaskPriority | null | undefined): string {
+    const v = p ?? 'MEDIUM';
+    const labels: Record<TaskPriority, string> = {
+      LOW: 'Low',
+      MEDIUM: 'Medium',
+      HIGH: 'High',
+      URGENT: 'Urgent',
+    };
+    return labels[v] ?? String(v);
+  }
+
+  effectivePriority(p: TaskPriority | null | undefined): TaskPriority {
+    return p ?? 'MEDIUM';
+  }
+
   updateStatusFromSelect(t: Task, value: string): void {
     if (!value || value.trim() === '') return;
     this.updateStatus(t, value as TaskStatus);

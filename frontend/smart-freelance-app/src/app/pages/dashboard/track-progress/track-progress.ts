@@ -12,6 +12,7 @@ import {
   ProgressCommentRequest,
   PageResponse,
   StalledProjectDto,
+  isProgressNextDueOverdue,
 } from '../../../core/services/planning.service';
 import { Card } from '../../../shared/components/card/card';
 import { forkJoin, Subject, Subscription } from 'rxjs';
@@ -410,6 +411,14 @@ export class TrackProgress implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  nextDueIsOverdue(u: ProgressUpdate): boolean {
+    return isProgressNextDueOverdue(u);
+  }
+
+  overdueReminderWasSentToFreelancer(u: ProgressUpdate): boolean {
+    return u.nextDueOverdueNotified === true;
   }
 
   formatDate(s: string): string {

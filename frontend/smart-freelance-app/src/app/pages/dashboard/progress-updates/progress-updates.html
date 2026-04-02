@@ -113,7 +113,15 @@
                 }
                 <p class="update-meta">Updated {{ formatDate(u.updatedAt) }}</p>
                 @if (u.nextUpdateDue) {
-                  <p class="update-next-due">Next due: {{ formatDate(u.nextUpdateDue) }}</p>
+                  <p class="update-next-due" [class.update-next-due--overdue]="nextDueIsOverdue(u)">
+                    Next due: {{ formatDate(u.nextUpdateDue) }}
+                    @if (nextDueIsOverdue(u)) {
+                      <span class="due-badge due-badge--overdue" title="The scheduled next-update time has passed">Overdue</span>
+                    }
+                    @if (nextDueIsOverdue(u) && overdueReminderWasSent(u)) {
+                      <span class="due-badge due-badge--notified" title="An automatic reminder was sent to you">Reminder sent</span>
+                    }
+                  </p>
                 }
                 @if (u.githubRepoUrl) {
                   <p class="update-repo">
